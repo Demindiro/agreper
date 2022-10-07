@@ -6,10 +6,10 @@
 		<th>Forum</th>
 		<th>Last update</th>
 	</tr>
-	{% for id, name, description, t_id, t_title, t_mtime in subforums %}
+	{% for id, name, description, t_id, t_title, t_mtime in forums %}
 	<tr>
 		<td>
-			<p><a href="{{ url_for('subforum', forum_id = id) }}"><b>{{ name }}</b></a></p>
+			<p><a href="{{ url_for('forum', forum_id = id) }}"><b>{{ name }}</b></a></p>
 			<p>{{ description }}</p>
 		</td>
 		{% if t_id %}

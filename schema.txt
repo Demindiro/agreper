@@ -33,7 +33,7 @@ create table comments (
 	dead         boolean      not null  default false
 );
 
-create table subforums (
+create table forums (
 	forum_id            integer  unique  not null  primary key  autoincrement,
 	name                varchar(64) not null,
 	description         text,

@@ -5,10 +5,10 @@ class DB:
         self.conn = conn
         pass
 
-    def get_subforums(self):
+    def get_forums(self):
         return self._db().execute('''
             select f.forum_id, name, description, thread_id, title, update_time
-            from subforums f
+            from forums f
             left join threads t
             on t.thread_id = (
               select tt.thread_id
@@ -20,23 +20,23 @@ class DB:
             '''
         )
 
-    def get_subforum(self, subforum):
+    def get_forum(self, forum_id):
         return self._db().execute('''
             select name, description
-            from subforums
+            from forums
             where forum_id = ?
             ''',
-            (subforum,)
+            (forum_id,)
         ).fetchone()
 
-    def get_threads(self, subforum):
+    def get_threads(self, forum_id):
         return self._db().execute('''
             select t.thread_id, title, t.create_time, t.update_time, t.author_id, name, count(1)
             from threads t, users, comments c
             where forum_id = ? and user_id = t.author_id and t.thread_id = c.thread_id
             group by t.thread_id
             ''',
-            (subforum,)
+            (forum_id,)
         )
 
     def get_thread(self, thread):
@@ -191,10 +191,11 @@ class DB:
             (thread_id, author_id, text, time, time, thread_id)
         )
         if c.rowcount > 0:
+            print('SHIT')
             c.execute('''
                 update threads
                 set update_time = ?
-                where threads.thread_id = ?
+                where thread_id = ?
                 ''',
                 (time, thread_id)
             )

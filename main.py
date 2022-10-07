@@ -14,14 +14,14 @@ app.config['SECRET_KEY'] = 'totally random'
 
 @app.route('/')
 def index():
-    return render_template('index.html', title = NAME, subforums = db.get_subforums())
+    return render_template('index.html', title = NAME, forums = db.get_forums())
 
 @app.route('/forum/<int:forum_id>/')
-def subforum(forum_id):
-    title, description = db.get_subforum(forum_id)
+def forum(forum_id):
+    title, description = db.get_forum(forum_id)
     threads = db.get_threads(forum_id)
     return render_template(
-        'subforum.html',
+        'forum.html',
         title = title,
         forum_id = forum_id,
         description = description,
