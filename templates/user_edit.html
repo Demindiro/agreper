@@ -1,0 +1,9 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<form method="post">
+	<p>{{ name }}</p>
+	<textarea name="about">{{ about }}</textarea>
+	<input type="submit" value="Update">
+</form>
+{% endblock %}

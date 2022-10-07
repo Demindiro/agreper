@@ -3,7 +3,7 @@ create table users (
 	name       varchar(32)   unique  not null,
 	password   varchar(128)  not null,
 	email      varchar(254),
-	about      text,
+	about      text          not null  default '',
 	join_date  integer,
 	role       integer       not null  default 0
 );

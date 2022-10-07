@@ -1,6 +1,20 @@
-insert into users (name, password, email) values ("Foo", "supasecret", "foo@bar.baz");
-insert into users (name, password, email) values ("Bar", "rgjieogir", "bar@foo.baz");
-insert into users (name, password) values ("bazzers", "reogke");
+insert into users (name, password, email) values (
+	"Foo",
+	-- supasecret
+	"$argon2id$v=19$m=65536,t=3,p=4$qBWCEAKgdA4BYOy915qzlg$KhGy3UF0QMlplt2eB7r7QNL2kDcggXUimRWUrWql8sI",
+	"foo@bar.baz"
+);
+insert into users (name, password, email) values (
+	"Bar",
+	-- abraca
+	"$argon2id$v=19$m=65536,t=3,p=4$klJKCUFoDaF07j3nPCeEUA$lCphd5n1YIs8MaVop2vGNirwknkh91qJIZHMuBOlgWA",
+	"bar@foo.baz"
+);
+insert into users (name, password) values (
+	"bazzers",
+	-- e
+	"$argon2id$v=19$m=65536,t=3,p=4$9v5fS2ktxTinNEbIGUOoFQ$LMdEuAuuTCJ7utOE88+nXn7o6R/DEKY8ZA6wV+YkVGQ"
+);
 
 insert into subforums (name, description, allowed_roles_mask)
 	values ("Earth", "The totality of all space and time; all that is, has been, and will be.", 1);

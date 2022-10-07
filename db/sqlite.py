@@ -49,5 +49,44 @@ class DB:
         return str(parent) + str(children)
         return parent
 
+    def get_user_password(self, username):
+        return self._db().execute('''
+            select user_id, password
+            from users
+            where name = ?
+            ''',
+            (username,)
+        ).fetchone()
+
+    def get_user_public_info(self, user_id):
+        return self._db().execute('''
+            select name, about
+            from users
+            where user_id = ?
+            ''',
+            (user_id,)
+        ).fetchone()
+
+    def get_user_private_info(self, user_id):
+        return self._db().execute('''
+            select about
+            from users
+            where user_id = ?
+            ''',
+            (user_id,)
+        ).fetchone()
+
+    def set_user_private_info(self, user_id, about):
+        print('BROH', about)
+        db = self._db()
+        db.execute('''
+            update users
+            set about = ?
+            where user_id = ?
+            ''',
+            (about, user_id)
+        )
+        db.commit()
+
     def _db(self):
         return sqlite3.connect(self.conn)

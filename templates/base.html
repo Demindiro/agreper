@@ -5,8 +5,18 @@
 <body>
 	<nav>
 		<a href="{{ url_for('index') }}">Home</a>
+		{% if 'user_id' in session %}
+		<a href="{{ url_for('user_edit') }}">{{ session.get('username', '???') }}</a>
+		|
+		<a href="{{ url_for('logout') }}">Logout</a>
+		{% else %}
+		<a href="{{ url_for('login') }}">Login</a>
+		{% endif %}
 	</nav>
 	<h1>{{ title }}</h1>
+	{% for category, msg in get_flashed_messages(True) %}
+	<p>{{ category}}: {{ msg }}</p>
+	{% endfor %}
 	<main>
 		{% block content %}{% endblock %}
 	</main>
