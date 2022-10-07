@@ -10,7 +10,7 @@
 </div>
 {% endif %}
 <i>{{ f_author(author, create_time, modify_time) }}</i>
-<p>{{ text }}</p>
+<p>{{ minimd(text) | safe }}</p>
 
 {{ reply() }}
 

@@ -5,7 +5,7 @@
 {% macro render_comment_pre(comment) %}
 <div class=comment>
 	{{ author(comment.author, comment.create_time, comment.modify_time) }}
-	<p>{{ comment.text }}</p>
+	<p>{{ minimd(comment.text) | safe }}</p>
 {% endmacro %}
 
 {% macro render_comment_post(comment) %}

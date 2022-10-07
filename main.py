@@ -91,7 +91,7 @@ def user_edit():
         return redirect(url_for('login'))
 
     if request.method == 'POST':
-        about = request.form['about']
+        about = request.form['about'].replace('\r', '')
         db.set_user_private_info(user_id, about)
     else:
         about, = db.get_user_private_info(user_id)
@@ -120,7 +120,7 @@ def new_thread(forum_id):
         return redirect(url_for('login'))
 
     if request.method == 'POST':
-        id, = db.add_thread(user_id, forum_id, request.form['title'], request.form['text'], time.time_ns())
+        id, = db.add_thread(user_id, forum_id, request.form['title'], request.form['text'].replace('\r', ''), time.time_ns())
         flash('Created thread', 'success')
         return redirect(url_for('thread', thread_id = id))
 
@@ -157,7 +157,7 @@ def add_comment(thread_id):
     if user_id is None:
         return redirect(url_for('login'))
 
-    if db.add_comment_to_thread(thread_id, user_id, request.form['text'], time.time_ns()):
+    if db.add_comment_to_thread(thread_id, user_id, request.form['text'].replace('\r', ''), time.time_ns()):
         flash('Added comment', 'success')
     else:
         flash('Failed to add comment', 'error')
@@ -169,7 +169,7 @@ def add_comment_parent(comment_id):
     if user_id is None:
         return redirect(url_for('login'))
 
-    if db.add_comment_to_comment(comment_id, user_id, request.form['text'], time.time_ns()):
+    if db.add_comment_to_comment(comment_id, user_id, request.form['text'].replace('\r', ''), time.time_ns()):
         flash('Added comment', 'success')
     else:
         flash('Failed to add comment', 'error')
@@ -245,4 +245,19 @@ def utility_processor():
             return f(t.month, n.month, "month")
         # This shouldn't be reachable, but it's still better to return something
         return "incredibly long ago"
-    return {'format_since': format_since}
+
+    def minimd(text):
+        # Replace angle brackets to prevent XSS
+        # Also replace ampersands to prevent surprises.
+        text = text.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
+        # Split into paragraphs
+        paragraphs = text.split('\n\n')
+        paragraphs = map(lambda l: l if not l.startswith('  ') else f'<pre>{l}</pre>', paragraphs)
+        paragraphs = map(lambda l: f'<p>{l}</p>', paragraphs)
+        # Glue together again
+        return ''.join(paragraphs)
+
+    return {
+        'format_since': format_since,
+        'minimd': minimd,
+    }
