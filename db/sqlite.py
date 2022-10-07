@@ -161,7 +161,6 @@ class DB:
     def add_comment_to_comment(self, parent_id, author_id, text, time):
         db = self._db()
         c = db.cursor()
-        print(c.lastrowid, parent_id)
         c.execute('''
             insert into comments(thread_id, parent_id, author_id, text, create_time, modify_time)
             select thread_id, ?, ?, ?, ?, ?
@@ -170,7 +169,7 @@ class DB:
             ''',
             (parent_id, author_id, text, time, time, parent_id)
         )
-        print(c.lastrowid)
+        db.commit()
         return c.rowcount > 0
 
     def _db(self):
