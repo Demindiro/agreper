@@ -1,0 +1,9 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<ul>
+	{% for id, name, description in subforums %}
+	<li><a href="{{ url_for('subforum', forum_id = id) }}">{{ name }} - {{ description }}</a></li>
+	{% endfor %}
+</ul>
+{% endblock %}

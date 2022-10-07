@@ -1,0 +1,41 @@
+create table users (
+	user_id    integer       unique  not null  primary key  autoincrement,
+	name       varchar(32)   unique  not null,
+	password   varchar(128)  not null,
+	email      varchar(254),
+	about      text,
+	join_date  integer,
+	role       integer       not null  default 0
+);
+
+create table threads (
+	thread_id    integer      unique  not null  primary key  autoincrement,
+	author_id    integer      not null,
+	forum_id     integer      not null,
+	create_date  integer      not null,
+	modify_date  integer      not null,
+	update_date  integer      not null,
+	title        varchar(64)  not null,
+	text         text         not null,
+	score        integer      not null  default 0,
+	dead         boolean      not null  default false
+);
+
+create table comments (
+	comment_id   integer      unique  not null  primary key  autoincrement,
+	thread_id    integer      not null,
+	author_id    integer      not null,
+	parent_id    integer,
+	create_date  integer      not null,
+	modify_date  integer      not null,
+	text         text         not null,
+	score        integer      not null  default 0,
+	dead         boolean      not null  default false
+);
+
+create table subforums (
+	forum_id            integer  unique  not null  primary key  autoincrement,
+	name                varchar(64) not null,
+	description         text,
+	allowed_roles_mask  integer  not null
+);
