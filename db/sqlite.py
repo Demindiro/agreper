@@ -131,16 +131,18 @@ class DB:
             (rowid,)
         ).fetchone()
 
-    def delete_thread(self, thread_id):
+    def delete_thread(self, user_id, thread_id):
         db = self._db()
-        db.execute('''
+        c = db.cursor()
+        c.execute('''
             delete
             from threads
-            where thread_id = ?
+            where thread_id = ? and author_id = ?
             ''',
-            (thread_id,)
+            (thread_id, user_id)
         )
         db.commit()
+        return c.rowcount > 0
 
     def add_comment_to_thread(self, thread_id, author_id, text, time):
         db = self._db()
@@ -153,9 +155,8 @@ class DB:
             ''',
             (thread_id, author_id, text, time, time, thread_id)
         )
-        rowid = c.lastrowid
         db.commit()
-        return rowid is not None
+        return c.rowcount > 0
 
     def add_comment_to_comment(self, parent_id, author_id, text, time):
         db = self._db()
@@ -170,9 +171,7 @@ class DB:
             (parent_id, author_id, text, time, time, parent_id)
         )
         print(c.lastrowid)
-        rowid = c.lastrowid
-        db.commit()
-        return rowid is not None
+        return c.rowcount > 0
 
     def _db(self):
         return sqlite3.connect(self.conn)

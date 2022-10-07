@@ -137,8 +137,15 @@ def confirm_delete_thread(thread_id):
 
 @app.route('/thread/<int:thread_id>/delete/', methods = ['POST'])
 def delete_thread(thread_id):
-    db.delete_thread(thread_id)
-    flash('Thread has been deleted', 'success')
+    user_id = session.get('user_id')
+    if user_id is None:
+        return redirect(url_for('login'))
+
+    if db.delete_thread(user_id, thread_id):
+        flash('Thread has been deleted', 'success')
+    else:
+        flash('Thread could not be removed', 'error')
+        # TODO return 403, maybe?
     return redirect(url_for('index'))
 
 @app.route('/thread/<int:thread_id>/comment/', methods = ['POST'])

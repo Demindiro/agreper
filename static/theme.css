@@ -85,6 +85,12 @@ table.form > * > tr > td, th {
 }
 
 .flash.success {
+	background-color: lightgreen;
+	border-radius: 5px;
+	padding: 8px;
+}
+
+.flash.error {
 	background-color: #ff4646;
 	border-radius: 5px;
 	padding: 8px;
