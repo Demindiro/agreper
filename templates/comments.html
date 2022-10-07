@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% from 'comment.html' import render_comment, reply %}
+{% from 'comment.html' import render_comment, render_comment_pre, render_comment_post, reply %}
 
 {% block content %}
 <sup><a href="{{ url_for('thread', thread_id = thread_id) }}">thread</a></sup>
@@ -7,9 +7,14 @@
 <sup><a href="../{{ parent_id }}">parent</a></sup>
 {% endif %}
 
+{{ render_comment_pre(reply_comment) }}
+
 {{ reply() }}
 
 {% for c in comments %}
 {{ render_comment(c) }}
 {% endfor %}
+
+{{ render_comment_post(reply_comment) }}
+
 {% endblock %}

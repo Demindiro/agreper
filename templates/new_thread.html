@@ -2,8 +2,16 @@
 
 {% block content %}
 <form method="post">
-	<input type="text" name="title">
-	<textarea name="text"></textarea>
-	<input type="submit" value="Post">
+	<table class=form>
+		<tr>
+			<td>Title</td>
+			<td><input type="text" name="title"></td>
+		</tr>
+		<tr>
+			<td>Text</td>
+			<td><textarea name="text"></textarea></td>
+		</tr>
+	</table>
+	<p><input type="submit" value="Post"></p>
 </form>
 {% endblock %}

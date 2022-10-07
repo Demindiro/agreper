@@ -1,9 +1,14 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<ul>
+<table>
+	<tr>
+		<th>Forum</th>
+	</tr>
 	{% for id, name, description in subforums %}
-	<li><a href="{{ url_for('subforum', forum_id = id) }}">{{ name }} - {{ description }}</a></li>
+	<tr>
+		<td><a href="{{ url_for('subforum', forum_id = id) }}"><b>{{ name }}</b> - {{ description }}</a></td>
+	</tr>
 	{% endfor %}
-</ul>
+</table>
 {% endblock %}

@@ -46,9 +46,13 @@ def comment(comment_id):
     user_id = session.get('user_id')
     thread_id, parent_id, title, comments = db.get_subcomments(comment_id)
     comments = create_comment_tree(comments)
+    reply_comment, = comments
+    comments = reply_comment.children
+    reply_comment.children = []
     return render_template(
         'comments.html',
         title = title,
+        reply_comment = reply_comment,
         comments = comments,
         parent_id = parent_id,
         thread_id = thread_id,

@@ -2,10 +2,12 @@
 
 {% block content %}
 <p>Are you sure you want to delete "{{ thread_title }}"?</p>
-<form method="post" action="../delete">
-	<input type="submit" value="Yes">
-</form>
-<form method="get" action="..">
-	<input type="submit" value="No">
-</form>
+<p>
+	<form method="post" action="../delete" style=inline>
+		<input type="submit" value="Yes">
+	</form>
+	<form method="get" action=".." style=inline>
+		<input type="submit" value="No">
+	</form>
+</p>
 {% endblock %}

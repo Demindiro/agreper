@@ -1,23 +1,27 @@
 <!doctype html>
 <head>
 	<title>{{ title }}</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta content="utf-8" http-equiv="encoding">
+	<link rel=stylesheet href="{{ url_for('static', filename='theme.css') }}">
 </head>
 <body>
 	<nav>
-		<a href="{{ url_for('index') }}">Home</a>
+		<a class=logo href="{{ url_for('index') }}">A</a>
+		<div style="margin:auto"></div>
 		{% if 'user_id' in session %}
 		<a href="{{ url_for('user_edit') }}">{{ session.get('username', '???') }}</a>
-		|
+		<span>|</span>
 		<a href="{{ url_for('logout') }}">Logout</a>
 		{% else %}
 		<a href="{{ url_for('login') }}">Login</a>
 		{% endif %}
 	</nav>
-	<h1>{{ title }}</h1>
-	{% for category, msg in get_flashed_messages(True) %}
-	<p>{{ category}}: {{ msg }}</p>
-	{% endfor %}
 	<main>
+		<h1>{{ title }}</h1>
+		{% for category, msg in get_flashed_messages(True) %}
+		<p class="flash {{ category }}">{{ msg }}</p>
+		{% endfor %}
 		{% block content %}{% endblock %}
 	</main>
 </body>
