@@ -6,13 +6,13 @@ class DB:
         pass
 
     def get_subforums(self):
-        return self._db().execute('select forum_id, name, description from subforums').fetchall()
+        return self._db().execute('select forum_id, name, description from subforums')
 
     def get_subforum(self, subforum):
         return self._db().execute('select name, description from subforums where forum_id = ?', (subforum,)).fetchone()
 
     def get_threads(self, subforum):
-        return self._db().execute('select thread_id, title from threads where forum_id = ?', (subforum,)).fetchall()
+        return self._db().execute('select thread_id, title from threads where forum_id = ?', (subforum,))
 
     def get_thread(self, thread):
         db = self._db()
@@ -29,7 +29,7 @@ class DB:
             where thread_id = ? and author_id = user_id
             ''',
             (thread,)
-        ).fetchall()
+        )
         return title, text, author, author_id, comments
 
     def get_thread_title(self, thread_id):
@@ -48,15 +48,30 @@ class DB:
             where thread_id = ?
             ''',
             (thread,)
-        ).fetchall()
+        )
 
-    def get_comment_tree(self, comment):
+    def get_subcomments(self, comment_id):
         db = self._db()
-        parent = db.execute('select text from comments where comment_id = ?', (comment,)).fetchall()
-        children = db.execute('select text from comments where parent_id = ?', (comment,)).fetchall()
-        print(parent, children)
-        return str(parent) + str(children)
-        return parent
+        thread_id, parent_id, title = db.execute('''
+            select threads.thread_id, parent_id, title
+            from threads, comments
+            where comment_id = ? and threads.thread_id = comments.thread_id
+            ''',
+            (comment_id,)
+        ).fetchone()
+        # Recursive CTE, see https://www.sqlite.org/lang_with.html
+        return thread_id, parent_id, title, db.execute('''
+            with recursive
+              descendant_of(id) as (
+                select comment_id from comments where comment_id = ?
+                union
+                select comment_id from descendant_of, comments where id = parent_id
+              )
+            select id, parent_id, name, text from descendant_of, comments, users
+            where id = comment_id and user_id = author_id
+            ''',
+            (comment_id,)
+        )
 
     def get_user_password(self, username):
         return self._db().execute('''
@@ -126,6 +141,38 @@ class DB:
             (thread_id,)
         )
         db.commit()
+
+    def add_comment_to_thread(self, thread_id, author_id, text, time):
+        db = self._db()
+        c = db.cursor()
+        c.execute('''
+            insert into comments(thread_id, author_id, text, create_time, modify_time)
+            select ?, ?, ?, ?, ?
+            from threads
+            where thread_id = ?
+            ''',
+            (thread_id, author_id, text, time, time, thread_id)
+        )
+        rowid = c.lastrowid
+        db.commit()
+        return rowid is not None
+
+    def add_comment_to_comment(self, parent_id, author_id, text, time):
+        db = self._db()
+        c = db.cursor()
+        print(c.lastrowid, parent_id)
+        c.execute('''
+            insert into comments(thread_id, parent_id, author_id, text, create_time, modify_time)
+            select thread_id, ?, ?, ?, ?, ?
+            from comments
+            where comment_id = ?
+            ''',
+            (parent_id, author_id, text, time, time, parent_id)
+        )
+        print(c.lastrowid)
+        rowid = c.lastrowid
+        db.commit()
+        return rowid is not None
 
     def _db(self):
         return sqlite3.connect(self.conn)

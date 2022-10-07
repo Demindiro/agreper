@@ -43,8 +43,16 @@ def thread(thread_id):
 
 @app.route('/comment/<int:comment_id>/')
 def comment(comment_id):
-    #return str(db.get_comment_tree(comment_id)[0])
-    return str(db.get_comment_tree(comment_id))
+    user_id = session.get('user_id')
+    thread_id, parent_id, title, comments = db.get_subcomments(comment_id)
+    comments = create_comment_tree(comments)
+    return render_template(
+        'comments.html',
+        title = title,
+        comments = comments,
+        parent_id = parent_id,
+        thread_id = thread_id,
+    )
 
 @app.route('/login/', methods = ['GET', 'POST'])
 def login():
@@ -129,21 +137,50 @@ def delete_thread(thread_id):
     flash('Thread has been deleted', 'success')
     return redirect(url_for('index'))
 
+@app.route('/thread/<int:thread_id>/comment/', methods = ['POST'])
+def add_comment(thread_id):
+    user_id = session.get('user_id')
+    if user_id is None:
+        return redirect(url_for('login'))
+
+    if db.add_comment_to_thread(thread_id, user_id, request.form['text'], time.time_ns()):
+        flash('Added comment', 'success')
+    else:
+        flash('Failed to add comment', 'error')
+    return redirect(url_for('thread', thread_id = thread_id))
+
+@app.route('/comment/<int:comment_id>/comment/', methods = ['POST'])
+def add_comment_parent(comment_id):
+    user_id = session.get('user_id')
+    if user_id is None:
+        return redirect(url_for('login'))
+
+    if db.add_comment_to_comment(comment_id, user_id, request.form['text'], time.time_ns()):
+        flash('Added comment', 'success')
+    else:
+        flash('Failed to add comment', 'error')
+    return redirect(url_for('comment', comment_id = comment_id))
+
+
 class Comment:
-    def __init__(self, author, text):
+    def __init__(self, id, author, text):
+        self.id = id
         self.author = author
         self.text = text
         self.children = []
 
 def create_comment_tree(comments):
+    # Collect comments first, then build the tree in case we encounter a child before a parent
+    comment_map = {
+        comment_id: (Comment(comment_id, author, text), parent_id)
+        for comment_id, parent_id, author, text
+        in comments
+    }
     root = []
-    comment_map = {}
-    for comment_id, parent_id, author, text in comments:
-        comment = Comment(author, text)
+    for comment, parent_id in comment_map.values():
         parent = comment_map.get(parent_id)
         if parent is not None:
-            parent.children.append(comment)
+            parent[0].children.append(comment)
         else:
             root.append(comment)
-        comment_map[comment_id] = comment
     return root

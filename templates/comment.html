@@ -1,0 +1,19 @@
+{% macro render_comment(comment) %}
+<div style="margin-left:20px">
+	<p><i>{{ comment.author }}</i></p>
+	<p>{{ comment.text }}</p>
+	<sup><a href="{{ url_for("comment", comment_id = comment.id) }}">reply</a></sup>
+	{% for c in comment.children %}
+	{{ render_comment(c) }}
+	{% endfor %}
+</div>
+{% endmacro %}
+
+{% macro reply() %}
+{% if 'user_id' in session %}
+<form method="post" action="comment/">
+	<textarea name="text"></textarea>
+	<input type="submit" value="Post comment">
+</form>
+{% endif %}
+{% endmacro %}

@@ -2,15 +2,10 @@
 {% from 'comment.html' import render_comment, reply %}
 
 {% block content %}
-{% if manage %}
-<div>
-	<form method="get" action="confirm_delete/">
-		<input type="submit" value="Delete">
-	</form>
-</div>
+<sup><a href="{{ url_for('thread', thread_id = thread_id) }}">thread</a></sup>
+{% if parent_id %}
+<sup><a href="../{{ parent_id }}">parent</a></sup>
 {% endif %}
-<p>{{ author }} - rjgoire</p>
-<p>{{ text }}</p>
 
 {{ reply() }}
 
