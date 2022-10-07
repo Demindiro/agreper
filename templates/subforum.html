@@ -6,10 +6,18 @@
 <table>
 	<tr>
 		<th>Topic</th>
+		<th>Author</th>
+		<th>Created</th>
+		<th>Updated</th>
+		<th>Comments</th>
 	</tr>
-	{% for id, title in threads %}
+	{% for id, title, ctime, utime, author_id, author, comment_count in threads %}
 	<tr>
 		<th><a href="{{ url_for('thread', thread_id = id) }}">{{ title }}</a></th>
+		<td><a href="{{ url_for('user_info', user_id = author_id) }}">{{ author }}</a></td>
+		<td>{{ format_since(ctime) }}</td>
+		<td>{{ format_since(utime) }}</td>
+		<td>{{ comment_count }}</td>
 	</tr>
 	{% endfor %}
 </table>

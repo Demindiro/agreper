@@ -1,6 +1,10 @@
+{% macro author(name, ctime, mtime) %}
+<p><sub><i>{{ name }} - {{ format_since(ctime) }}{% if ctime != mtime %} (last modified {{ format_since(mtime) }}){% endif %}</i></sub></p>
+{% endmacro %}
+
 {% macro render_comment_pre(comment) %}
 <div class=comment>
-	<p><sub><i>{{ comment.author }}</i></sub></p>
+	{{ author(comment.author, comment.create_time, comment.modify_time) }}
 	<p>{{ comment.text }}</p>
 {% endmacro %}
 

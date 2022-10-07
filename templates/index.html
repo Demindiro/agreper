@@ -4,10 +4,22 @@
 <table>
 	<tr>
 		<th>Forum</th>
+		<th>Last update</th>
 	</tr>
-	{% for id, name, description in subforums %}
+	{% for id, name, description, t_id, t_title, t_mtime in subforums %}
 	<tr>
-		<td><a href="{{ url_for('subforum', forum_id = id) }}"><b>{{ name }}</b> - {{ description }}</a></td>
+		<td>
+			<p><a href="{{ url_for('subforum', forum_id = id) }}"><b>{{ name }}</b></a></p>
+			<p>{{ description }}</p>
+		</td>
+		{% if t_id %}
+		<td>
+			<p><a href="{{ url_for('thread', thread_id = t_id) }}"><b>{{ t_title }}</b></a></p>
+			<p>{{ format_since(t_mtime) }}</p>
+		</td>
+		{% else %}
+		<td>No threads</td>
+		{% endif %}
 	</tr>
 	{% endfor %}
 </table>

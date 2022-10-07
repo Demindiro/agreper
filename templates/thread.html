@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% from 'comment.html' import render_comment, reply %}
+{% from 'comment.html' import render_comment, reply, author as f_author with context %}
 
 {% block content %}
 {% if manage %}
@@ -9,7 +9,7 @@
 	</form>
 </div>
 {% endif %}
-<sup><i>{{ author }}</i></sup>
+<i>{{ f_author(author, create_time, modify_time) }}</i>
 <p>{{ text }}</p>
 
 {{ reply() }}

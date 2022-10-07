@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% from 'comment.html' import render_comment, render_comment_pre, render_comment_post, reply %}
+{% from 'comment.html' import render_comment, render_comment_pre, render_comment_post, reply with context %}
 
 {% block content %}
 <sup><a href="{{ url_for('thread', thread_id = thread_id) }}">thread</a></sup>

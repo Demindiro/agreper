@@ -6,31 +6,56 @@ class DB:
         pass
 
     def get_subforums(self):
-        return self._db().execute('select forum_id, name, description from subforums')
+        return self._db().execute('''
+            select f.forum_id, name, description, thread_id, title, update_time
+            from subforums f
+            left join threads t
+            on t.thread_id = (
+              select tt.thread_id
+              from threads tt
+              where f.forum_id = tt.forum_id
+              order by update_time desc
+              limit 1
+            )
+            '''
+        )
 
     def get_subforum(self, subforum):
-        return self._db().execute('select name, description from subforums where forum_id = ?', (subforum,)).fetchone()
+        return self._db().execute('''
+            select name, description
+            from subforums
+            where forum_id = ?
+            ''',
+            (subforum,)
+        ).fetchone()
 
     def get_threads(self, subforum):
-        return self._db().execute('select thread_id, title from threads where forum_id = ?', (subforum,))
+        return self._db().execute('''
+            select t.thread_id, title, t.create_time, t.update_time, t.author_id, name, count(1)
+            from threads t, users, comments c
+            where forum_id = ? and user_id = t.author_id and t.thread_id = c.thread_id
+            group by t.thread_id
+            ''',
+            (subforum,)
+        )
 
     def get_thread(self, thread):
         db = self._db()
-        title, text, author, author_id = db.execute('''
-            select title, text, name, author_id
+        title, text, author, author_id, create_time, modify_time = db.execute('''
+            select title, text, name, author_id, create_time, modify_time
             from threads, users
             where thread_id = ? and author_id = user_id
             ''',
             (thread,)
         ).fetchone()
         comments = db.execute('''
-            select comment_id, parent_id, name, text
+            select comment_id, parent_id, name, text, create_time, modify_time
             from comments, users
             where thread_id = ? and author_id = user_id
             ''',
             (thread,)
         )
-        return title, text, author, author_id, comments
+        return title, text, author, author_id, create_time, modify_time, comments
 
     def get_thread_title(self, thread_id):
         return self._db().execute('''
@@ -40,6 +65,16 @@ class DB:
             ''',
             (thread_id,)
         ).fetchone()
+
+    def get_recent_threads(self, limit):
+        return self._db().execute('''
+            select thread_id, title, modify_date
+            from threads
+            order by modify_date
+            limit ?
+            ''',
+            (limit,)
+        )
 
     def get_comments(self, thread):
         return self._db().execute('''
@@ -67,7 +102,7 @@ class DB:
                 union
                 select comment_id from descendant_of, comments where id = parent_id
               )
-            select id, parent_id, name, text from descendant_of, comments, users
+            select id, parent_id, name, text, create_time, modify_time from descendant_of, comments, users
             where id = comment_id and user_id = author_id
             ''',
             (comment_id,)
@@ -155,8 +190,17 @@ class DB:
             ''',
             (thread_id, author_id, text, time, time, thread_id)
         )
-        db.commit()
-        return c.rowcount > 0
+        if c.rowcount > 0:
+            c.execute('''
+                update threads
+                set update_time = ?
+                where threads.thread_id = ?
+                ''',
+                (time, thread_id)
+            )
+            db.commit()
+            return True
+        return False
 
     def add_comment_to_comment(self, parent_id, author_id, text, time):
         db = self._db()
@@ -169,8 +213,21 @@ class DB:
             ''',
             (parent_id, author_id, text, time, time, parent_id)
         )
-        db.commit()
-        return c.rowcount > 0
+        if c.rowcount > 0:
+            c.execute('''
+                update threads
+                set update_time = ?
+                where threads.thread_id = (
+                  select c.thread_id
+                  from comments c
+                  where comment_id = ?
+                )
+                ''',
+                (time, parent_id)
+            )
+            db.commit()
+            return True
+        return False
 
     def _db(self):
         return sqlite3.connect(self.conn)

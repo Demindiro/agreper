@@ -1,8 +1,9 @@
-from flask import Flask, render_template, session, request, redirect, url_for, flash
+from flask import Flask, render_template, session, request, redirect, url_for, flash, g
 from db.sqlite import DB
 import os
 import passlib.hash
 import time
+from datetime import datetime
 
 app = Flask(__name__)
 db = DB(os.getenv('DB'))
@@ -30,13 +31,15 @@ def subforum(forum_id):
 @app.route('/thread/<int:thread_id>/')
 def thread(thread_id):
     user_id = session.get('user_id')
-    title, text, author, author_id, comments = db.get_thread(thread_id)
+    title, text, author, author_id, create_time, modify_time, comments = db.get_thread(thread_id)
     comments = create_comment_tree(comments)
     return render_template(
         'thread.html',
         title = title,
         text = text,
         author = author,
+        create_time = create_time,
+        modify_time = modify_time,
         comments = comments,
         manage = author_id == user_id,
     )
@@ -174,24 +177,72 @@ def add_comment_parent(comment_id):
 
 
 class Comment:
-    def __init__(self, id, author, text):
+    def __init__(self, id, author, text, create_time, modify_time):
         self.id = id
         self.author = author
         self.text = text
         self.children = []
+        self.create_time = create_time
+        self.modify_time = modify_time
 
 def create_comment_tree(comments):
     # Collect comments first, then build the tree in case we encounter a child before a parent
     comment_map = {
-        comment_id: (Comment(comment_id, author, text), parent_id)
-        for comment_id, parent_id, author, text
+        comment_id: (Comment(comment_id, author, text, create_time, modify_time), parent_id)
+        for comment_id, parent_id, author, text, create_time, modify_time
         in comments
     }
     root = []
+    # Build tree
     for comment, parent_id in comment_map.values():
         parent = comment_map.get(parent_id)
         if parent is not None:
             parent[0].children.append(comment)
         else:
             root.append(comment)
+    # Sort each comment based on create time
+    def sort_time(l):
+        l.sort(key=lambda c: c.modify_time, reverse=True)
+        for c in l:
+            sort_time(c.children)
+    sort_time(root)
     return root
+
+@app.context_processor
+def utility_processor():
+    def format_since(t):
+        n = time.time_ns()
+        if n < t:
+            return 'In a distant future'
+
+        # Try the sane thing first
+        dt = (n - t) // 10 ** 9
+        if dt < 1:
+            return "less than a second ago"
+        if dt < 2:
+            return f"1 second ago"
+        if dt < 60:
+            return f"{dt} seconds ago"
+        if dt < 119:
+            return f"1 minute ago"
+        if dt < 3600:
+            return f"{dt // 60} minutes ago"
+        if dt < 3600 * 2:
+            return f"1 hour ago"
+        if dt < 3600 * 24:
+            return f"{dt // 3600} hours ago"
+        if dt < 3600 * 24 * 31:
+            return f"{dt // (3600 * 24)} days ago"
+
+        # Try some very rough estimate, whatever
+        f = lambda x: datetime.utcfromtimestamp(x // 10 ** 9)
+        n, t = f(n), f(t)
+        def f(x, y, s):
+            return f'{y - x} {s}{"s" if y - x > 1 else ""} ago'
+        if t.year < n.year:
+            return f(t.year, n.year, "year")
+        if t.month < n.month:
+            return f(t.month, n.month, "month")
+        # This shouldn't be reachable, but it's still better to return something
+        return "incredibly long ago"
+    return {'format_since': format_since}
