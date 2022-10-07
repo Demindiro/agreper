@@ -11,6 +11,13 @@
 {% endmacro %}
 
 {% block content %}
+{% if manage %}
+<div>
+	<form method="get" action="confirm_delete/">
+		<input type="submit" value="Delete">
+	</form>
+</div>
+{% endif %}
 <p>{{ author }} - rjgoire</p>
 <p>{{ text }}</p>
 {% for c in comments %}

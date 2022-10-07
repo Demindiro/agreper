@@ -19,11 +19,11 @@ insert into users (name, password) values (
 insert into subforums (name, description, allowed_roles_mask)
 	values ("Earth", "The totality of all space and time; all that is, has been, and will be.", 1);
 
-insert into threads (author_id, forum_id, create_date, modify_date, update_date, title, text)
+insert into threads (author_id, forum_id, create_time, modify_time, update_time, title, text)
 	values (1, 1, 0, 0, 0, "Hello, world!",
 		'In its most general sense, the term "world" refers to the totality of entities, to the whole of reality or to everything that is.');
 
-insert into comments (author_id, thread_id, create_date, modify_date, text)
+insert into comments (author_id, thread_id, create_time, modify_time, text)
 	values (2, 1, 0, 0, "Hi!");
-insert into comments (author_id, thread_id, create_date, modify_date, text, parent_id)
+insert into comments (author_id, thread_id, create_time, modify_time, text, parent_id)
 	values (3, 1, 0, 0, "Greetings.", 1);

@@ -4,7 +4,7 @@ create table users (
 	password   varchar(128)  not null,
 	email      varchar(254),
 	about      text          not null  default '',
-	join_date  integer,
+	join_time  integer,
 	role       integer       not null  default 0
 );
 
@@ -12,9 +12,9 @@ create table threads (
 	thread_id    integer      unique  not null  primary key  autoincrement,
 	author_id    integer      not null,
 	forum_id     integer      not null,
-	create_date  integer      not null,
-	modify_date  integer      not null,
-	update_date  integer      not null,
+	create_time  integer      not null,
+	modify_time  integer      not null,
+	update_time  integer      not null,
 	title        varchar(64)  not null,
 	text         text         not null,
 	score        integer      not null  default 0,
@@ -26,8 +26,8 @@ create table comments (
 	thread_id    integer      not null,
 	author_id    integer      not null,
 	parent_id    integer,
-	create_date  integer      not null,
-	modify_date  integer      not null,
+	create_time  integer      not null,
+	modify_time  integer      not null,
 	text         text         not null,
 	score        integer      not null  default 0,
 	dead         boolean      not null  default false

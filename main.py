@@ -19,13 +19,27 @@ def index():
 def subforum(forum_id):
     title, description = db.get_subforum(forum_id)
     threads = db.get_threads(forum_id)
-    return render_template('subforum.html', title = title, description = description, threads = threads)
+    return render_template(
+        'subforum.html',
+        title = title,
+        forum_id = forum_id,
+        description = description,
+        threads = threads,
+    )
 
 @app.route('/thread/<int:thread_id>/')
 def thread(thread_id):
-    title, text, author, comments = db.get_thread(thread_id)
+    user_id = session.get('user_id')
+    title, text, author, author_id, comments = db.get_thread(thread_id)
     comments = create_comment_tree(comments)
-    return render_template('thread.html', title = title, text = text, author = author, comments = comments)
+    return render_template(
+        'thread.html',
+        title = title,
+        text = text,
+        author = author,
+        comments = comments,
+        manage = author_id == user_id,
+    )
 
 @app.route('/comment/<int:comment_id>/')
 def comment(comment_id):
@@ -74,7 +88,7 @@ def user_edit():
         about = about
     )
 
-@app.route('/user/<int:user_id>')
+@app.route('/user/<int:user_id>/')
 def user_info(user_id):
     name, about = db.get_user_public_info(user_id)
     return render_template(
@@ -83,6 +97,37 @@ def user_info(user_id):
         name = name,
         about = about
     )
+
+@app.route('/forum/<int:forum_id>/new/', methods = ['GET', 'POST'])
+def new_thread(forum_id):
+    user_id = session.get('user_id')
+    if user_id is None:
+        return redirect(url_for('login'))
+
+    if request.method == 'POST':
+        id, = db.add_thread(user_id, forum_id, request.form['title'], request.form['text'], time.time_ns())
+        flash('Created thread', 'success')
+        return redirect(url_for('thread', thread_id = id))
+
+    return render_template(
+        'new_thread.html',
+        title = 'Create new thread',
+    )
+
+@app.route('/thread/<int:thread_id>/confirm_delete/')
+def confirm_delete_thread(thread_id):
+    title, = db.get_thread_title(thread_id)
+    return render_template(
+        'confirm_delete_thread.html',
+        title = 'Delete thread',
+        thread_title = title,
+    )
+
+@app.route('/thread/<int:thread_id>/delete/', methods = ['POST'])
+def delete_thread(thread_id):
+    db.delete_thread(thread_id)
+    flash('Thread has been deleted', 'success')
+    return redirect(url_for('index'))
 
 class Comment:
     def __init__(self, author, text):
