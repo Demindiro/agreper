@@ -2,7 +2,7 @@
 {%- from 'comment.html' import render_comment, reply, thread_author with context %}
 
 {%- block content %}
-<i>{{ thread_author(author_id, author, create_time, modify_time) }}</i>
+{{ thread_author(author_id, author, create_time, modify_time) }}
 <p>{{ minimd(text) | safe }}</p>
 
 {{- reply() }}

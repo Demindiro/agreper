@@ -229,6 +229,33 @@ def edit_thread(thread_id):
         text = text,
     )
 
+@app.route('/comment/<int:comment_id>/edit', methods = ['GET', 'POST'])
+def edit_comment(comment_id):
+    user_id = session.get('user_id')
+    if user_id is None:
+        return redirect(url_for('login'))
+
+    if request.method == 'POST':
+        if db.modify_comment(
+            comment_id,
+            user_id,
+            request.form['text'].replace('\r', ''),
+            time.time_ns(),
+        ):
+            flash('Comment has been edited', 'success')
+        else:
+            flash('Comment could not be edited', 'error')
+        return redirect(url_for('comment', comment_id = comment_id))
+
+    title, text = db.get_comment(comment_id)
+
+    return render_template(
+        'edit_comment.html',
+        title = 'Edit comment',
+        thread_title = title,
+        text = text,
+    )
+
 
 class Comment:
     def __init__(self, id, author_id, author, text, create_time, modify_time, parent_id):
@@ -311,7 +338,7 @@ def utility_processor():
         # Also replace ampersands to prevent surprises.
         text = text.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
         # Split into paragraphs
-        paragraphs = text.split('\n\n')
+        paragraphs = map(lambda l: l.strip('\n'), text.split('\n\n'))
         paragraphs = map(lambda l: l if not l.startswith('  ') else f'<pre>{l}</pre>', paragraphs)
         paragraphs = map(lambda l: f'<p>{l}</p>', paragraphs)
         # Glue together again

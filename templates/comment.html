@@ -11,6 +11,7 @@
 	<a href="{{ url_for('comment', comment_id = comment.parent_id) }}#"> parent</a>
 	{%- endif -%}
 	{%- if comment.author_id == session.get('user_id') -%}
+	<a href="{{ url_for('edit_comment', comment_id = comment.id) }}"> edit</a>
 	{%- endif -%}
 	{%- if comment.author_id == session.get('user_id') -%}
 	<a href="{{ url_for('confirm_delete_comment', comment_id = comment.id) }}"> delete</a>

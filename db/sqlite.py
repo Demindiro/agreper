@@ -268,5 +268,20 @@ class DB:
             return True
         return False
 
+    def modify_comment(self, comment_id, user_id, text, time):
+        db = self._db()
+        c = db.cursor()
+        c.execute('''
+            update comments
+            set text = ?, modify_time = ?
+            where comment_id = ? and author_id = ?
+            ''',
+            (text, time, comment_id, user_id)
+        )
+        if c.rowcount > 0:
+            db.commit()
+            return True
+        return False
+
     def _db(self):
         return sqlite3.connect(self.conn)

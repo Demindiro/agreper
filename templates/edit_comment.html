@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<form method="post">
+	<table class=form>
+		<tr>
+			<td>Thread</td>
+			<td>{{ thread_title }}</td>
+		</tr>
+		<tr>
+			<td>Text</td>
+			<td><textarea name="text">{{ text }}</textarea></td>
+		</tr>
+	</table>
+	<p><input type="submit" value="Post"></p>
+</form>
+{% endblock %}
