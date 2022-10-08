@@ -31,9 +31,10 @@ class DB:
 
     def get_threads(self, forum_id):
         return self._db().execute('''
-            select t.thread_id, title, t.create_time, t.update_time, t.author_id, name, count(1)
-            from threads t, users, comments c
-            where forum_id = ? and user_id = t.author_id and t.thread_id = c.thread_id
+            select t.thread_id, title, t.create_time, t.update_time, t.author_id, name, count(c.thread_id)
+            from threads t, users
+            left join comments c on t.thread_id = c.thread_id
+            where forum_id = ? and user_id = t.author_id
             group by t.thread_id
             ''',
             (forum_id,)
