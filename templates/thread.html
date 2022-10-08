@@ -1,15 +1,8 @@
 {% extends 'base.html' %}
-{% from 'comment.html' import render_comment, reply, author as f_author with context %}
+{% from 'comment.html' import render_comment, reply, thread_author with context %}
 
 {% block content %}
-{% if manage %}
-<div>
-	<form method="get" action="confirm_delete/">
-		<input type="submit" value="Delete">
-	</form>
-</div>
-{% endif %}
-<i>{{ f_author(author, create_time, modify_time, None, None) }}</i>
+<i>{{ thread_author(author_id, author, create_time, modify_time) }}</i>
 <p>{{ minimd(text) | safe }}</p>
 
 {{ reply() }}

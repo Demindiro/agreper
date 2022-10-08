@@ -38,11 +38,11 @@ def thread(thread_id):
         title = title,
         text = text,
         author = author,
+        author_id = author_id,
         thread_id = thread_id,
         create_time = create_time,
         modify_time = modify_time,
         comments = comments,
-        manage = author_id == user_id,
     )
 
 @app.route('/comment/<int:comment_id>/')
@@ -176,10 +176,34 @@ def add_comment_parent(comment_id):
         flash('Failed to add comment', 'error')
     return redirect(url_for('comment', comment_id = comment_id))
 
+@app.route('/comment/<int:comment_id>/confirm_delete/')
+def confirm_delete_comment(comment_id):
+    title, text = db.get_comment(comment_id)
+    return render_template(
+        'confirm_delete_comment.html',
+        title = 'Delete comment',
+        thread_title = title,
+        text = text,
+    )
+
+@app.route('/comment/<int:comment_id>/delete/', methods = ['POST'])
+def delete_comment(comment_id):
+    user_id = session.get('user_id')
+    if user_id is None:
+        return redirect(url_for('login'))
+
+    if db.delete_comment(user_id, comment_id):
+        flash('Comment has been deleted', 'success')
+    else:
+        flash('Comment could not be removed', 'error')
+        # TODO return 403, maybe?
+    return redirect(url_for('index'))
+
 
 class Comment:
-    def __init__(self, id, author, text, create_time, modify_time, parent_id):
+    def __init__(self, id, author_id, author, text, create_time, modify_time, parent_id):
         self.id = id
+        self.author_id = author_id
         self.author = author
         self.text = text
         self.children = []
@@ -190,8 +214,8 @@ class Comment:
 def create_comment_tree(comments):
     # Collect comments first, then build the tree in case we encounter a child before a parent
     comment_map = {
-        comment_id: Comment(comment_id, author, text, create_time, modify_time, parent_id)
-        for comment_id, parent_id, author, text, create_time, modify_time
+        comment_id: Comment(comment_id, author_id, author, text, create_time, modify_time, parent_id)
+        for comment_id, parent_id, author_id, author, text, create_time, modify_time
         in comments
     }
     root = []
@@ -209,6 +233,7 @@ def create_comment_tree(comments):
             sort_time(c.children)
     sort_time(root)
     return root
+
 
 @app.context_processor
 def utility_processor():

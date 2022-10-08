@@ -2,10 +2,6 @@
 {% from 'comment.html' import render_comment, render_comment_pre, render_comment_post, reply with context %}
 
 {% block content %}
-<sup><a href="{{ url_for('thread', thread_id = thread_id) }}">thread</a></sup>
-{% if parent_id %}
-<sup><a href="../{{ parent_id }}">parent</a></sup>
-{% endif %}
 
 {{ render_comment_pre(reply_comment, thread_id) }}
 

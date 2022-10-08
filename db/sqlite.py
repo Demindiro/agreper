@@ -50,7 +50,7 @@ class DB:
             (thread,)
         ).fetchone()
         comments = db.execute('''
-            select comment_id, parent_id, name, text, create_time, modify_time
+            select comment_id, parent_id, author_id, name, text, create_time, modify_time
             from comments, users
             where thread_id = ? and author_id = user_id
             ''',
@@ -86,6 +86,15 @@ class DB:
             (thread,)
         )
 
+    def get_comment(self, comment_id):
+        return self._db().execute('''
+            select title, c.text
+            from comments c, threads t
+            where comment_id = ? and c.thread_id = t.thread_id
+            ''',
+            (comment_id,)
+        ).fetchone()
+
     def get_subcomments(self, comment_id):
         db = self._db()
         thread_id, parent_id, title = db.execute('''
@@ -103,7 +112,7 @@ class DB:
                 union
                 select comment_id from descendant_of, comments where id = parent_id
               )
-            select id, parent_id, name, text, create_time, modify_time from descendant_of, comments, users
+            select id, parent_id, author_id, name, text, create_time, modify_time from descendant_of, comments, users
             where id = comment_id and user_id = author_id
             ''',
             (comment_id,)
@@ -176,6 +185,19 @@ class DB:
             where thread_id = ? and author_id = ?
             ''',
             (thread_id, user_id)
+        )
+        db.commit()
+        return c.rowcount > 0
+
+    def delete_comment(self, user_id, comment_id):
+        db = self._db()
+        c = db.cursor()
+        c.execute('''
+            delete
+            from comments
+            where comment_id = ? and author_id = ?
+            ''',
+            (comment_id, user_id)
         )
         db.commit()
         return c.rowcount > 0

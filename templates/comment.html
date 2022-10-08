@@ -1,13 +1,33 @@
-{% macro author(name, ctime, mtime, thread_id, parent_id) %}
+{% macro author(name, ctime, mtime) %}
+<i>{{ name }} - {{ format_since(ctime) }}{% if ctime != mtime %} (last modified {{ format_since(mtime) }}){% endif %}</i>
+{% endmacro %}
+
+{% macro comment_author(comment, thread_id) %}
 <p>
 	<sub>
-		<i>{{ name }} - {{ format_since(ctime) }}{% if ctime != mtime %} (last modified {{ format_since(mtime) }}){% endif %}</i>
-		{% if thread_id is not none %}
+		{{ author(comment.author, comment.create_time, comment.modify_time) }}
 		{# Suffixing a # prevents unnecessary reloads #}
 		<a href="{{ url_for('thread', thread_id = thread_id) }}#">thread</a>
+		{% if comment.parent_id is not none %}
+		<a href="{{ url_for('comment', comment_id = comment.parent_id) }}#">parent</a>
 		{% endif %}
-		{% if parent_id is not none %}
-		<a href="{{ url_for('comment', comment_id = parent_id) }}#">parent</a>
+		{% if comment.author_id == session.get('user_id') %}
+		{% endif %}
+		{% if comment.author_id == session.get('user_id') %}
+		<a href="{{ url_for('confirm_delete_comment', comment_id = comment.id) }}">delete</a>
+		{% endif %}
+	</sub>
+</p>
+{% endmacro %}
+
+{% macro thread_author(author_id, name, ctime, mtime) %}
+<p>
+	<sub>
+		{{ author(name, ctime, mtime) }}
+		{% if author_id == session.get('user_id') %}
+		{% endif %}
+		{% if author_id == session.get('user_id') %}
+		<a href="{{ url_for('confirm_delete_thread', thread_id = thread_id) }}">delete</a>
 		{% endif %}
 	</sub>
 </p>
@@ -15,7 +35,7 @@
 
 {% macro render_comment_pre(comment, thread_id) %}
 <div class=comment>
-	{{ author(comment.author, comment.create_time, comment.modify_time, thread_id, comment.parent_id) }}
+	{{ comment_author(comment, thread_id) }}
 	<p>{{ minimd(comment.text) | safe }}</p>
 {% endmacro %}
 
