@@ -1,10 +1,10 @@
-{%- macro author(name, ctime, mtime) -%}
-<i>{{ name }} - {{ format_since(ctime) }}{% if ctime != mtime %} (last modified {{ format_since(mtime) }}){% endif %}</i>
+{%- macro author(id, name, ctime, mtime) -%}
+<i><a href="{{ url_for('user_info', user_id = id) }}">{{ name }}</a> - {{ format_since(ctime) }}{% if ctime != mtime %} (last modified {{ format_since(mtime) }}){% endif %}</i>
 {%- endmacro -%}
 
 {%- macro comment_author(comment, thread_id) -%}
 <p><sub>
-	{{- author(comment.author, comment.create_time, comment.modify_time) -}}
+	{{- author(comment.author_id, comment.author, comment.create_time, comment.modify_time) }} |
 	{# Suffixing a # prevents unnecessary reloads #}
 	<a href="{{ url_for('thread', thread_id = thread_id) }}#"> thread</a>
 	{%- if comment.parent_id is not none -%}
@@ -21,7 +21,7 @@
 
 {%- macro thread_author(author_id, name, ctime, mtime) -%}
 <p><sub>
-	{{- author(name, ctime, mtime) -}}
+	{{- author(author_id, name, ctime, mtime) -}}
 	{%- if author_id == session.get('user_id') -%}
 	<a href="{{ url_for('edit_thread', thread_id = thread_id) }}"> edit</a>
 	{%- endif -%}
