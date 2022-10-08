@@ -51,8 +51,10 @@ class DB:
         ).fetchone()
         comments = db.execute('''
             select comment_id, parent_id, author_id, name, text, create_time, modify_time
-            from comments, users
-            where thread_id = ? and author_id = user_id
+            from comments
+              left join users
+              on author_id = user_id
+            where thread_id = ?
             ''',
             (thread,)
         )
@@ -293,18 +295,22 @@ class DB:
         return False
 
     def add_user(self, username, password, time):
-        db = self._db()
-        c = db.cursor()
-        c.execute('''
-            insert into users(name, password, join_time)
-            values (lower(?), ?, ?)
-            ''',
-            (username, password, time)
-        )
-        if c.rowcount > 0:
-            db.commit()
-            return True
-        return False
+        try:
+            db = self._db()
+            c = db.cursor()
+            c.execute('''
+                insert into users(name, password, join_time)
+                values (lower(?), ?, ?)
+                ''',
+                (username, password, time)
+            )
+            if c.rowcount > 0:
+                db.commit()
+                return True
+            return False
+        except sqlite3.IntegrityError:
+            # User already exists, probably
+            return False
 
     def _db(self):
         return sqlite3.connect(self.conn)

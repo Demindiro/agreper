@@ -274,7 +274,7 @@ def register():
         ):
             flash('CAPTCHA answer is incorrect', 'error')
         elif not db.add_user(username, hash_password(password), time.time_ns()):
-            flash('Failed to create user (username may already be taken)')
+            flash('Failed to create account (username may already be taken)', 'error')
         else:
             flash('Account has been created. You can login now.', 'success')
             return redirect(url_for('index'))
