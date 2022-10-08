@@ -122,7 +122,7 @@ class DB:
         return self._db().execute('''
             select user_id, password
             from users
-            where name = ?
+            where name = lower(?)
             ''',
             (username,)
         ).fetchone()
@@ -138,7 +138,7 @@ class DB:
 
     def get_user_private_info(self, user_id):
         return self._db().execute('''
-            select about
+            select name, about
             from users
             where user_id = ?
             ''',
@@ -155,6 +155,15 @@ class DB:
             (about, user_id)
         )
         db.commit()
+
+    def get_user_name(self, user_id):
+        return self._db().execute('''
+            select name
+            from users
+            where user_id = ?
+            ''',
+            (user_id,)
+        ).fetchone()
 
     def add_thread(self, author_id, forum_id, title, text, time):
         db = self._db()
@@ -288,7 +297,7 @@ class DB:
         c = db.cursor()
         c.execute('''
             insert into users(name, password, join_time)
-            values (?, ?, ?)
+            values (lower(?), ?, ?)
             ''',
             (username, password, time)
         )

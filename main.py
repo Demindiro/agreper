@@ -75,7 +75,6 @@ def login():
             if verify_password(request.form['password'], hash):
                 flash('Logged in', 'success')
                 session['user_id'] = id
-                session['username'] = request.form['username']
                 return redirect(url_for('index'))
         else:
             # Sleep to reduce effectiveness of bruteforce
@@ -98,12 +97,14 @@ def user_edit():
     if request.method == 'POST':
         about = request.form['about'].replace('\r', '')
         db.set_user_private_info(user_id, about)
+        name, = db.get_user_name(user_id)
+        flash('Updated profile', 'success')
     else:
-        about, = db.get_user_private_info(user_id)
+        name, about = db.get_user_private_info(user_id)
 
     return render_template(
         'user_edit.html',
-        name = session.get('username', '???'),
+        name = name,
         title = 'Edit profile',
         about = about
     )

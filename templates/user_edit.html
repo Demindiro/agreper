@@ -1,9 +1,13 @@
 {% extends 'base.html' %}
 
 {% block content %}
+<p><a href="{{ url_for('user_info', user_id = session['user_id']) }}">View public profile</a></p>
 <form method="post">
-	<p>{{ name }}</p>
-	<p><textarea name="about">{{ about }}</textarea></p>
-	<p><input type="submit" value="Update"></p>
+<table>
+<tr><td>Username</td><td>{{ name }}</td></tr>
+<tr><td>ID</td><td>{{ session['user_id'] }}</td></tr>
+<tr><td>About</td><td><textarea name="about">{{ about }}</textarea></td></tr>
 </form>
+</table>
+<input type="submit" value="Update">
 {% endblock %}

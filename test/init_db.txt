@@ -1,12 +1,12 @@
 insert into users (name, password, email, join_time) values (
-	"Foo",
+	"foo",
 	-- supasecret
 	"$argon2id$v=19$m=65536,t=3,p=4$qBWCEAKgdA4BYOy915qzlg$KhGy3UF0QMlplt2eB7r7QNL2kDcggXUimRWUrWql8sI",
 	"foo@bar.baz",
 	0
 );
 insert into users (name, password, email, join_time) values (
-	"Bar",
+	"bar",
 	-- abraca
 	"$argon2id$v=19$m=65536,t=3,p=4$klJKCUFoDaF07j3nPCeEUA$lCphd5n1YIs8MaVop2vGNirwknkh91qJIZHMuBOlgWA",
 	"bar@foo.baz",
