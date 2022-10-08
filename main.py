@@ -201,7 +201,7 @@ def delete_comment(comment_id):
         # TODO return 403, maybe?
     return redirect(url_for('index'))
 
-@app.route('/thread/<int:thread_id>/edit', methods = ['GET', 'POST'])
+@app.route('/thread/<int:thread_id>/edit/', methods = ['GET', 'POST'])
 def edit_thread(thread_id):
     user_id = session.get('user_id')
     if user_id is None:
@@ -229,7 +229,7 @@ def edit_thread(thread_id):
         text = text,
     )
 
-@app.route('/comment/<int:comment_id>/edit', methods = ['GET', 'POST'])
+@app.route('/comment/<int:comment_id>/edit/', methods = ['GET', 'POST'])
 def edit_comment(comment_id):
     user_id = session.get('user_id')
     if user_id is None:
