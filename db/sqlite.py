@@ -77,15 +77,6 @@ class DB:
             (limit,)
         )
 
-    def get_comments(self, thread):
-        return self._db().execute('''
-            select text
-            from comments
-            where thread_id = ?
-            ''',
-            (thread,)
-        )
-
     def get_comment(self, comment_id):
         return self._db().execute('''
             select title, c.text

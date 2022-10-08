@@ -1,62 +1,58 @@
-{% macro author(name, ctime, mtime) %}
+{%- macro author(name, ctime, mtime) -%}
 <i>{{ name }} - {{ format_since(ctime) }}{% if ctime != mtime %} (last modified {{ format_since(mtime) }}){% endif %}</i>
-{% endmacro %}
+{%- endmacro -%}
 
-{% macro comment_author(comment, thread_id) %}
-<p>
-	<sub>
-		{{ author(comment.author, comment.create_time, comment.modify_time) }}
-		{# Suffixing a # prevents unnecessary reloads #}
-		<a href="{{ url_for('thread', thread_id = thread_id) }}#">thread</a>
-		{% if comment.parent_id is not none %}
-		<a href="{{ url_for('comment', comment_id = comment.parent_id) }}#">parent</a>
-		{% endif %}
-		{% if comment.author_id == session.get('user_id') %}
-		{% endif %}
-		{% if comment.author_id == session.get('user_id') %}
-		<a href="{{ url_for('confirm_delete_comment', comment_id = comment.id) }}">delete</a>
-		{% endif %}
-	</sub>
-</p>
-{% endmacro %}
+{%- macro comment_author(comment, thread_id) -%}
+<p><sub>
+	{{- author(comment.author, comment.create_time, comment.modify_time) -}}
+	{# Suffixing a # prevents unnecessary reloads #}
+	<a href="{{ url_for('thread', thread_id = thread_id) }}#"> thread</a>
+	{%- if comment.parent_id is not none -%}
+	<a href="{{ url_for('comment', comment_id = comment.parent_id) }}#"> parent</a>
+	{%- endif -%}
+	{%- if comment.author_id == session.get('user_id') -%}
+	{%- endif -%}
+	{%- if comment.author_id == session.get('user_id') -%}
+	<a href="{{ url_for('confirm_delete_comment', comment_id = comment.id) }}"> delete</a>
+	{%- endif -%}
+</sub></p>
+{%- endmacro -%}
 
-{% macro thread_author(author_id, name, ctime, mtime) %}
-<p>
-	<sub>
-		{{ author(name, ctime, mtime) }}
-		{% if author_id == session.get('user_id') %}
-		{% endif %}
-		{% if author_id == session.get('user_id') %}
-		<a href="{{ url_for('confirm_delete_thread', thread_id = thread_id) }}">delete</a>
-		{% endif %}
-	</sub>
-</p>
-{% endmacro %}
+{%- macro thread_author(author_id, name, ctime, mtime) -%}
+<p><sub>
+	{{- author(name, ctime, mtime) -}}
+	{%- if author_id == session.get('user_id') -%}
+	{%- endif -%}
+	{%- if author_id == session.get('user_id') -%}
+	<a href="{{ url_for('confirm_delete_thread', thread_id = thread_id) }}"> delete</a>
+	{%- endif -%}
+</sub></p>
+{%- endmacro -%}
 
-{% macro render_comment_pre(comment, thread_id) %}
+{%- macro render_comment_pre(comment, thread_id) -%}
 <div class=comment>
-	{{ comment_author(comment, thread_id) }}
-	<p>{{ minimd(comment.text) | safe }}</p>
-{% endmacro %}
+	{{- comment_author(comment, thread_id) -}}
+	<p>{{- minimd(comment.text) | safe -}}</p>
+{%- endmacro -%}
 
-{% macro render_comment_post(comment, thread_id) %}
-	{% for c in comment.children %}
-	{{ render_comment(c, thread_id) }}
-	{% endfor %}
+{%- macro render_comment_post(comment, thread_id) -%}
+	{%- for c in comment.children -%}
+	{{- render_comment(c, thread_id) -}}
+	{%- endfor -%}
 </div>
-{% endmacro %}
+{%- endmacro -%}
 
-{% macro render_comment(comment, thread_id) %}
-{{ render_comment_pre(comment, thread_id) }}
+{%- macro render_comment(comment, thread_id) -%}
+{{- render_comment_pre(comment, thread_id) -}}
 <sup><a href="{{ url_for("comment", comment_id = comment.id) }}">reply</a></sup>
-{{ render_comment_post(comment, thread_id) }}
-{% endmacro %}
+{{- render_comment_post(comment, thread_id) -}}
+{%- endmacro -%}
 
-{% macro reply() %}
-{% if 'user_id' in session %}
+{%- macro reply() -%}
+{%- if 'user_id' in session -%}
 <form method="post" action="comment/">
 	<p><textarea name="text"></textarea></p>
 	<p><input type="submit" value="Post comment"></p>
 </form>
-{% endif %}
-{% endmacro %}
+{%- endif -%}
+{%- endmacro -%}

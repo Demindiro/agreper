@@ -11,6 +11,8 @@ NAME = 'Agrepy'
 
 # TODO config file
 app.config['SECRET_KEY'] = 'totally random'
+app.jinja_env.trim_blocks = True
+app.jinja_env.lstrip_blocks = True
 
 @app.route('/')
 def index():
@@ -212,6 +214,7 @@ class Comment:
         self.parent_id = parent_id
 
 def create_comment_tree(comments):
+    start = time.time();
     # Collect comments first, then build the tree in case we encounter a child before a parent
     comment_map = {
         comment_id: Comment(comment_id, author_id, author, text, create_time, modify_time, parent_id)
@@ -232,6 +235,8 @@ def create_comment_tree(comments):
         for c in l:
             sort_time(c.children)
     sort_time(root)
+    if __debug__:
+        print('building tree with', len(comment_map), 'comments took', time.time() - start, 'seconds')
     return root
 
 

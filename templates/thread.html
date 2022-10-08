@@ -1,13 +1,13 @@
-{% extends 'base.html' %}
-{% from 'comment.html' import render_comment, reply, thread_author with context %}
+{%- extends 'base.html' %}
+{%- from 'comment.html' import render_comment, reply, thread_author with context %}
 
-{% block content %}
+{%- block content %}
 <i>{{ thread_author(author_id, author, create_time, modify_time) }}</i>
 <p>{{ minimd(text) | safe }}</p>
 
-{{ reply() }}
+{{- reply() }}
 
-{% for c in comments %}
-{{ render_comment(c, thread_id) }}
-{% endfor %}
-{% endblock %}
+{%- for c in comments %}
+{{- render_comment(c, thread_id) }}
+{%- endfor %}
+{%- endblock %}
