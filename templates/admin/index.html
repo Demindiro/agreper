@@ -1,0 +1,101 @@
+{% extends 'admin/base.html' -%}
+{% block content -%}
+<h2>Query</h2>
+<p>&#9888; Only use queries if you know what you're doing &#9888;</p>
+<form action=query/ method=post>
+<input type=text name=q placeholder="SELECT * from users">
+<input type=submit value=Submit>
+</form>
+<h2>Configuration</h2>
+<table>
+<tr>
+<td>Name</td>
+<td>
+<input type=text value="Agrepy">
+<input type=submit value=Set>
+</td>
+</tr>
+<tr>
+<td>Registrations enabled</td>
+<td>
+<input type=checkbox checked>
+<input type=submit value=Set>
+</td>
+</tr>
+</table>
+<h2>Forums</h2>
+<table>
+<tr>
+<th>ID</th>
+<th>Name</th>
+<th>Description</th>
+<th>Actions</th>
+</tr>
+{% for id, name, description, _, _, _ in forums %}
+<tr>
+<td>{{ id }}</td>
+<td>
+<form method=post action="forum/{{ id }}/edit/name/">
+<input type=text name=name value="{{ name }}"</input>
+<input type=submit value="Set name">
+</form>
+<td>
+<form method=post action="forum/{{ id }}/edit/description/">
+<textarea name=description>{{ description }}</textarea>
+<input type=submit value="Set description">
+</form>
+</td>
+<td><a href="#">Remove</a></td>
+</tr>
+{% endfor %}
+</table>
+<h3>Add forum</h3>
+<form method=post action="forum/new/">
+<table>
+<tr>
+<td>Name</td>
+<td><input type=text name=name></td>
+</tr>
+<tr>
+<td>Description</td>
+<td><textarea name=description></textarea></td>
+</tr>
+</table>
+<input type=submit value="Add forum">
+</form>
+<h2>Users</h2>
+<table>
+<tr>
+<th>ID</th>
+<th>Name</th>
+<th>Join date</th>
+<th>Role</th>
+<th>Banned until</th>
+<th>Actions</th>
+</tr>
+{%- for id, name, join_date, role, banned_until in users -%}
+<tr>
+<td>{{ id }}</td>
+<td>{{ name }}</td>
+<td>{{ format_time(join_date) }}</td>
+<td>{{ ['user', 'moderator', 'admin'][role] if role >= 0 and role <= 2 else role }}</td>
+<td>{{ '' if banned_until is none else format_time(banned_until) }}</td>
+<td>
+<form method=post action="user/{{ id }}/edit/ban/">
+<input type=number name=days placeholder=days>
+<input type=time name=time>
+<input type=submit value=Ban>
+</form>
+<form method=post action="user/{{ id }}/edit/role/">
+<select name=role>
+<option value=0>user</option>
+<option value=1>moderator</option>
+<option value=2>admin</option>
+</select>
+<input type=submit value="Set role">
+</form>
+</td>
+</tr>
+{%- endfor -%}
+</table>
+{%- endblock %}

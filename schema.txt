@@ -5,7 +5,8 @@ create table users (
 	email      varchar(254),
 	about      text          not null  default '',
 	join_time  integer       not null,
-	role       integer       not null  default 0
+	role       integer       not null  default 0,
+	banned_until integer
 );
 
 create table threads (
@@ -34,10 +35,9 @@ create table comments (
 );
 
 create table forums (
-	forum_id            integer       unique  not null  primary key  autoincrement,
+	forum_id            integer      unique  not null  primary key  autoincrement,
 	name                varchar(64)  not null,
-	description         text,
-	allowed_roles_mask  integer      not null
+	description         text         not null  default ''
 );
 
 -- Both of these speed up searches significantly if there are many threads or comments.

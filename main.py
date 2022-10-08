@@ -308,6 +308,67 @@ def register():
         answer = answer,
     )
 
+@app.route('/admin/')
+def admin():
+    user = get_user()
+    if user is None:
+        return redirect(url_for('login'))
+    if not user.is_admin():
+        return '<h1>Forbidden</h1>', 403
+
+    return render_template(
+        'admin/index.html',
+        title = 'Admin panel',
+        forums = db.get_forums(),
+        users = db.get_users(),
+    )
+
+@app.route('/admin/query/', methods = ['GET', 'POST'])
+def admin_query():
+    user = get_user()
+    if user is None:
+        return redirect(url_for('login'))
+    if not user.is_admin():
+        return '<h1>Forbidden</h1>', 403
+
+    try:
+        rows = db.query(request.form['q']) if request.method == 'POST' else []
+    except Exception as e:
+        flash(e, 'error')
+        rows = []
+    return render_template(
+        'admin/query.html',
+        title = 'Query',
+        rows = rows,
+    )
+
+@app.route('/admin/forum/<int:forum_id>/edit/<string:what>/', methods = ['POST'])
+def admin_edit_forum(forum_id, what):
+    try:
+        if what == 'description':
+            res = db.set_forum_description(forum_id, request.form['description'].replace('\r', ''))
+        elif what == 'name':
+            res = db.set_forum_name(forum_id, request.form['name'])
+        else:
+            flash(f'Unknown property "{what}"', 'error')
+            res = None
+        if res is True:
+            flash(f'Updated {what}', 'success')
+        elif res is False:
+            flash(f'Failed to update {what}', 'error')
+    except Exception as e:
+        flash(e, 'error')
+    return redirect(url_for('admin'))
+
+@app.route('/admin/forum/new/', methods = ['POST'])
+def admin_new_forum():
+    try:
+        db.add_forum(request.form['name'], request.form['description'].replace('\r', ''))
+        flash('Added forum', 'success')
+    except Exception as e:
+        flash(str(e), 'error')
+    return redirect(url_for('admin'))
+
 
 class Comment:
     def __init__(self, id, author_id, author, text, create_time, modify_time, parent_id):
@@ -407,6 +468,9 @@ def utility_processor():
         # This shouldn't be reachable, but it's still better to return something
         return "incredibly long ago"
 
+    def format_time(t):
+        return datetime.utcfromtimestamp(t / 10 ** 9)
+
     def minimd(text):
         # Replace angle brackets to prevent XSS
         # Also replace ampersands to prevent surprises.
@@ -420,6 +484,7 @@ def utility_processor():
 
     return {
         'format_since': format_since,
+        'format_time': format_time,
         'minimd': minimd,
     }
 

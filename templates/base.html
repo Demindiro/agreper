@@ -12,6 +12,10 @@
 		{% if user is not none %}
 		<a href="{{ url_for('user_edit') }}">{{ user.name }}</a>
 		<span>|</span>
+		{% if user.is_admin() %}
+		<a href="{{ url_for('admin') }}">Admin panel</a>
+		<span>|</span>
+		{% endif %}
 		<a href="{{ url_for('logout') }}">Logout</a>
 		{% else %}
 		<a href="{{ url_for('register') }}">Register</a>

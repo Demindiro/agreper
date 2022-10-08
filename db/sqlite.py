@@ -340,5 +340,52 @@ class DB:
             # User already exists, probably
             return False
 
+    def get_users(self):
+        return self._db().execute('''
+            select user_id, name, join_time, role, banned_until
+            from users
+            ''',
+        )
+
+    def set_forum_name(self, forum_id, name):
+        return self.change_one('''
+            update forums
+            set name = ?
+            where forum_id = ?
+            ''',
+            (name, forum_id)
+        )
+
+    def set_forum_description(self, forum_id, description):
+        return self.change_one('''
+            update forums
+            set description = ?
+            where forum_id = ?
+            ''',
+            (description, forum_id)
+        )
+
+    def add_forum(self, name, description):
+        db = self._db()
+        db.execute('''
+            insert into forums(name, description)
+            values (?, ?)
+            ''',
+            (name, description)
+        )
+        db.commit()
+
+    def change_one(self, query, values):
+        db = self._db()
+        c = db.cursor()
+        c.execute(query, values)
+        if c.rowcount > 0:
+            db.commit()
+            return True
+        return False
+
+    def query(self, q):
+        return self._db().execute(q)
+
     def _db(self):
         return sqlite3.connect(self.conn)

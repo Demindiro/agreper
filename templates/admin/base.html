@@ -1,0 +1,45 @@
+{# Don't use the default theme to emphasize this page is special -#}
+<!doctype html>
+<head>
+<title>{{ title }}</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta content="utf-8" http-equiv="encoding">
+<style>
+body {
+	font-family: sans-serif;
+}
+.flash.success {
+	background-color: lightgreen;
+	border-radius: 5px;
+	padding: 8px;
+}
+.flash.error {
+	background-color: #ff4646;
+	border-radius: 5px;
+	padding: 8px;
+}
+table {
+	border-collapse: collapse;
+	width: 80%;
+}
+th, td {
+	border: 1px solid;
+	padding: 5px;
+	text-align: left;
+}
+textarea {
+	width: 95%;
+}
+</style>
+</head>
+<body>
+<h1>{{ title }}</h1>
+<p>
+<a href="{{ url_for('admin') }}">Admin panel</a>
+<a href="{{ url_for('index') }}">Home page</a>
+</p>
+{%- for category, msg in get_flashed_messages(True) -%}
+<p class="flash {{ category }}">{{ msg }}</p>
+{%- endfor %}
+{%- block content %}{% endblock -%}
+</body>
