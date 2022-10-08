@@ -140,7 +140,7 @@ class DB:
 
     def get_user_private_info(self, user_id):
         return self._db().execute('''
-            select name, about
+            select about
             from users
             where user_id = ?
             ''',
@@ -157,6 +157,15 @@ class DB:
             (about, user_id)
         )
         db.commit()
+
+    def get_user_name_role(self, user_id):
+        return self._db().execute('''
+            select name, role
+            from users
+            where user_id = ?
+            ''',
+            (user_id,)
+        ).fetchone()
 
     def get_user_name(self, user_id):
         return self._db().execute('''
@@ -193,9 +202,13 @@ class DB:
         c.execute('''
             delete
             from threads
-            where thread_id = ? and author_id = ?
+            -- 1 = moderator, 2 = admin
+            where thread_id = ? and (
+              author_id = ?
+              or (select 1 from users where user_id = ? and (role = 1 or role = 2))
+            )
             ''',
-            (thread_id, user_id)
+            (thread_id, user_id, user_id)
         )
         db.commit()
         return c.rowcount > 0
@@ -206,9 +219,16 @@ class DB:
         c.execute('''
             delete
             from comments
-            where comment_id = ? and author_id = ?
+            where comment_id = ?
+              and (
+                author_id = ?
+                -- 1 = moderator, 2 = admin
+                or (select 1 from users where user_id = ? and (role = 1 or role = 2))
+              )
+              -- Don't allow deleting comments with children
+              and (select 1 from comments where parent_id = ?) is null
             ''',
-            (comment_id, user_id)
+            (comment_id, user_id, user_id, comment_id)
         )
         db.commit()
         return c.rowcount > 0
@@ -270,9 +290,13 @@ class DB:
         c.execute('''
             update threads
             set title = ?, text = ?, modify_time = ?
-            where thread_id = ? and author_id = ?
+            where thread_id = ? and (
+              author_id = ?
+              -- 1 = moderator, 2 = admin
+              or (select 1 from users where user_id = ? and (role = 1 or role = 2))
+            )
             ''',
-            (title, text, time, thread_id, user_id)
+            (title, text, time, thread_id, user_id, user_id)
         )
         if c.rowcount > 0:
             db.commit()
@@ -285,9 +309,13 @@ class DB:
         c.execute('''
             update comments
             set text = ?, modify_time = ?
-            where comment_id = ? and author_id = ?
+            where comment_id = ? and (
+              author_id = ?
+              -- 1 = moderator, 2 = admin
+              or (select 1 from users where user_id = ? and (role = 1 or role = 2))
+            )
             ''',
-            (text, time, comment_id, user_id)
+            (text, time, comment_id, user_id, user_id)
         )
         if c.rowcount > 0:
             db.commit()

@@ -9,8 +9,8 @@
 	<nav>
 		<a class=logo href="{{ url_for('index') }}">A</a>
 		<div style="margin:auto"></div>
-		{% if 'user_id' in session %}
-		<a href="{{ url_for('user_edit') }}">User panel</a>
+		{% if user is not none %}
+		<a href="{{ url_for('user_edit') }}">{{ user.name }}</a>
 		<span>|</span>
 		<a href="{{ url_for('logout') }}">Logout</a>
 		{% else %}

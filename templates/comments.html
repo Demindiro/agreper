@@ -3,7 +3,7 @@
 
 {% block content %}
 
-{{ render_comment_pre(reply_comment, thread_id) }}
+{{ render_comment_pre(reply_comment, thread_id, comments | length == 0) }}
 
 {{ reply() }}
 
