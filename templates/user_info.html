@@ -2,5 +2,5 @@
 
 {% block content %}
 <p>{{ name }}</p>
-<p>{{ about }}<p>
+<p>{{ minimd(about) | safe }}<p>
 {% endblock %}
