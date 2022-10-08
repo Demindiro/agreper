@@ -9,12 +9,12 @@
 	</form>
 </div>
 {% endif %}
-<i>{{ f_author(author, create_time, modify_time) }}</i>
+<i>{{ f_author(author, create_time, modify_time, None, None) }}</i>
 <p>{{ minimd(text) | safe }}</p>
 
 {{ reply() }}
 
 {% for c in comments %}
-{{ render_comment(c) }}
+{{ render_comment(c, thread_id) }}
 {% endfor %}
 {% endblock %}

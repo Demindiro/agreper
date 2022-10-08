@@ -7,14 +7,14 @@
 <sup><a href="../{{ parent_id }}">parent</a></sup>
 {% endif %}
 
-{{ render_comment_pre(reply_comment) }}
+{{ render_comment_pre(reply_comment, thread_id) }}
 
 {{ reply() }}
 
 {% for c in comments %}
-{{ render_comment(c) }}
+{{ render_comment(c, thread_id) }}
 {% endfor %}
 
-{{ render_comment_post(reply_comment) }}
+{{ render_comment_post(reply_comment, thread_id) }}
 
 {% endblock %}

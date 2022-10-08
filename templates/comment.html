@@ -1,24 +1,35 @@
-{% macro author(name, ctime, mtime) %}
-<p><sub><i>{{ name }} - {{ format_since(ctime) }}{% if ctime != mtime %} (last modified {{ format_since(mtime) }}){% endif %}</i></sub></p>
+{% macro author(name, ctime, mtime, thread_id, parent_id) %}
+<p>
+	<sub>
+		<i>{{ name }} - {{ format_since(ctime) }}{% if ctime != mtime %} (last modified {{ format_since(mtime) }}){% endif %}</i>
+		{% if thread_id is not none %}
+		{# Suffixing a # prevents unnecessary reloads #}
+		<a href="{{ url_for('thread', thread_id = thread_id) }}#">thread</a>
+		{% endif %}
+		{% if parent_id is not none %}
+		<a href="{{ url_for('comment', comment_id = parent_id) }}#">parent</a>
+		{% endif %}
+	</sub>
+</p>
 {% endmacro %}
 
-{% macro render_comment_pre(comment) %}
+{% macro render_comment_pre(comment, thread_id) %}
 <div class=comment>
-	{{ author(comment.author, comment.create_time, comment.modify_time) }}
+	{{ author(comment.author, comment.create_time, comment.modify_time, thread_id, comment.parent_id) }}
 	<p>{{ minimd(comment.text) | safe }}</p>
 {% endmacro %}
 
-{% macro render_comment_post(comment) %}
+{% macro render_comment_post(comment, thread_id) %}
 	{% for c in comment.children %}
-	{{ render_comment(c) }}
+	{{ render_comment(c, thread_id) }}
 	{% endfor %}
 </div>
 {% endmacro %}
 
-{% macro render_comment(comment) %}
-{{ render_comment_pre(comment) }}
+{% macro render_comment(comment, thread_id) %}
+{{ render_comment_pre(comment, thread_id) }}
 <sup><a href="{{ url_for("comment", comment_id = comment.id) }}">reply</a></sup>
-{{ render_comment_post(comment) }}
+{{ render_comment_post(comment, thread_id) }}
 {% endmacro %}
 
 {% macro reply() %}

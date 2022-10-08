@@ -38,6 +38,7 @@ def thread(thread_id):
         title = title,
         text = text,
         author = author,
+        thread_id = thread_id,
         create_time = create_time,
         modify_time = modify_time,
         comments = comments,
@@ -177,27 +178,28 @@ def add_comment_parent(comment_id):
 
 
 class Comment:
-    def __init__(self, id, author, text, create_time, modify_time):
+    def __init__(self, id, author, text, create_time, modify_time, parent_id):
         self.id = id
         self.author = author
         self.text = text
         self.children = []
         self.create_time = create_time
         self.modify_time = modify_time
+        self.parent_id = parent_id
 
 def create_comment_tree(comments):
     # Collect comments first, then build the tree in case we encounter a child before a parent
     comment_map = {
-        comment_id: (Comment(comment_id, author, text, create_time, modify_time), parent_id)
+        comment_id: Comment(comment_id, author, text, create_time, modify_time, parent_id)
         for comment_id, parent_id, author, text, create_time, modify_time
         in comments
     }
     root = []
     # Build tree
-    for comment, parent_id in comment_map.values():
-        parent = comment_map.get(parent_id)
+    for comment in comment_map.values():
+        parent = comment_map.get(comment.parent_id)
         if parent is not None:
-            parent[0].children.append(comment)
+            parent.children.append(comment)
         else:
             root.append(comment)
     # Sort each comment based on create time
