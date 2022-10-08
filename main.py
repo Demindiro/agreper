@@ -201,6 +201,34 @@ def delete_comment(comment_id):
         # TODO return 403, maybe?
     return redirect(url_for('index'))
 
+@app.route('/thread/<int:thread_id>/edit', methods = ['GET', 'POST'])
+def edit_thread(thread_id):
+    user_id = session.get('user_id')
+    if user_id is None:
+        return redirect(url_for('login'))
+
+    if request.method == 'POST':
+        if db.modify_thread(
+            thread_id,
+            user_id,
+            request.form['title'],
+            request.form['text'].replace('\r', ''),
+            time.time_ns(),
+        ):
+            flash('Thread has been edited', 'success')
+        else:
+            flash('Thread could not be edited', 'error')
+        return redirect(url_for('thread', thread_id = thread_id))
+
+    title, text = db.get_thread_title_text(thread_id)
+
+    return render_template(
+        'edit_thread.html',
+        title = 'Edit thread',
+        thread_title = title,
+        text = text,
+    )
+
 
 class Comment:
     def __init__(self, id, author_id, author, text, create_time, modify_time, parent_id):

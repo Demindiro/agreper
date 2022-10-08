@@ -22,6 +22,7 @@
 <p><sub>
 	{{- author(name, ctime, mtime) -}}
 	{%- if author_id == session.get('user_id') -%}
+	<a href="{{ url_for('edit_thread', thread_id = thread_id) }}"> edit</a>
 	{%- endif -%}
 	{%- if author_id == session.get('user_id') -%}
 	<a href="{{ url_for('confirm_delete_thread', thread_id = thread_id) }}"> delete</a>

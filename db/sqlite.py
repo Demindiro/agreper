@@ -67,6 +67,15 @@ class DB:
             (thread_id,)
         ).fetchone()
 
+    def get_thread_title_text(self, thread_id):
+        return self._db().execute('''
+            select title, text
+            from threads
+            where thread_id = ?
+            ''',
+            (thread_id,)
+        ).fetchone()
+
     def get_recent_threads(self, limit):
         return self._db().execute('''
             select thread_id, title, modify_date
@@ -240,6 +249,21 @@ class DB:
                 ''',
                 (time, parent_id)
             )
+            db.commit()
+            return True
+        return False
+
+    def modify_thread(self, thread_id, user_id, title, text, time):
+        db = self._db()
+        c = db.cursor()
+        c.execute('''
+            update threads
+            set title = ?, text = ?, modify_time = ?
+            where thread_id = ? and author_id = ?
+            ''',
+            (title, text, time, thread_id, user_id)
+        )
+        if c.rowcount > 0:
             db.commit()
             return True
         return False
