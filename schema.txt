@@ -34,8 +34,13 @@ create table comments (
 );
 
 create table forums (
-	forum_id            integer  unique  not null  primary key  autoincrement,
-	name                varchar(64) not null,
+	forum_id            integer       unique  not null  primary key  autoincrement,
+	name                varchar(64)  not null,
 	description         text,
-	allowed_roles_mask  integer  not null
+	allowed_roles_mask  integer      not null
 );
+
+-- Both of these speed up searches significantly if there are many threads or comments.
+-- Other indices have no measureable impact (yet, at least).
+create index forum_id on threads(forum_id);
+create index thread_id on comments(thread_id);
