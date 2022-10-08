@@ -14,6 +14,8 @@
 		<span>|</span>
 		<a href="{{ url_for('logout') }}">Logout</a>
 		{% else %}
+		<a href="{{ url_for('register') }}">Register</a>
+		<span>|</span>
 		<a href="{{ url_for('login') }}">Login</a>
 		{% endif %}
 	</nav>

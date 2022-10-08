@@ -283,5 +283,19 @@ class DB:
             return True
         return False
 
+    def add_user(self, username, password, time):
+        db = self._db()
+        c = db.cursor()
+        c.execute('''
+            insert into users(name, password, join_time)
+            values (?, ?, ?)
+            ''',
+            (username, password, time)
+        )
+        if c.rowcount > 0:
+            db.commit()
+            return True
+        return False
+
     def _db(self):
         return sqlite3.connect(self.conn)

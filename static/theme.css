@@ -95,3 +95,11 @@ table.form > * > tr > td, th {
 	border-radius: 5px;
 	padding: 8px;
 }
+
+.login {
+	width: 50%;
+}
+
+.login input[type=text], .login input[type=password] {
+	width: 90%;
+}

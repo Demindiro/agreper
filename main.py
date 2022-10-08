@@ -4,6 +4,7 @@ import os
 import passlib.hash
 import time
 from datetime import datetime
+import captcha
 
 app = Flask(__name__)
 db = DB(os.getenv('DB'))
@@ -11,6 +12,7 @@ NAME = 'Agrepy'
 
 # TODO config file
 app.config['SECRET_KEY'] = 'totally random'
+captcha_key = 'piss off bots'
 app.jinja_env.trim_blocks = True
 app.jinja_env.lstrip_blocks = True
 
@@ -70,7 +72,7 @@ def login():
         v = db.get_user_password(request.form['username'])
         if v is not None:
             id, hash = v
-            if passlib.hash.argon2.verify(request.form['password'], hash):
+            if verify_password(request.form['password'], hash):
                 flash('Logged in', 'success')
                 session['user_id'] = id
                 session['username'] = request.form['username']
@@ -256,6 +258,34 @@ def edit_comment(comment_id):
         text = text,
     )
 
+@app.route('/register/', methods = ['GET', 'POST'])
+def register():
+    if request.method == 'POST':
+        username, password = request.form['username'], request.form['password']
+        if len(username) < 3:
+            flash('Username must be at least 3 characters long', 'error')
+        elif len(password) < 8:
+            flash('Password must be at least 8 characters long', 'error')
+        elif not captcha.verify(
+            captcha_key,
+            request.form['captcha'],
+            request.form['answer'],
+        ):
+            flash('CAPTCHA answer is incorrect', 'error')
+        elif not db.add_user(username, hash_password(password), time.time_ns()):
+            flash('Failed to create user (username may already be taken)')
+        else:
+            flash('Account has been created. You can login now.', 'success')
+            return redirect(url_for('index'))
+
+    capt, answer = captcha.generate(captcha_key)
+    return render_template(
+        'register.html',
+        title = 'Register',
+        captcha = capt,
+        answer = answer,
+    )
+
 
 class Comment:
     def __init__(self, id, author_id, author, text, create_time, modify_time, parent_id):
@@ -348,3 +378,10 @@ def utility_processor():
         'format_since': format_since,
         'minimd': minimd,
     }
+
+
+def hash_password(password):
+    return passlib.hash.argon2.hash(password)
+
+def verify_password(password, hash):
+    return passlib.hash.argon2.verify(password, hash)

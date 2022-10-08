@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+
+{%- block content %}
+<form method="post" class=login>
+<table>
+<tr><td>Username</td><td><input type="text" name="username" minlength=3></td></tr>
+<tr><td>Password</td><td><input type="password" name="password" minlength=8></td></tr>
+<tr><td>{{ captcha }}</td><td><input type="text" name="captcha"></td></tr>
+</table>
+<input name="answer" value="{{ answer }}" hidden>
+<input type="submit" value="Register">
+</form>
+{% endblock %}
