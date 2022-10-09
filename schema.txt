@@ -11,7 +11,6 @@ create table users (
 	user_id    integer       unique  not null  primary key  autoincrement,
 	name       varchar(32)   unique  not null,
 	password   varchar(128)  not null,
-	email      varchar(254),
 	about      text          not null  default '',
 	join_time  integer       not null,
 	role       integer       not null  default 0,
