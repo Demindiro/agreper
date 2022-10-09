@@ -8,7 +8,7 @@ import os, sys, subprocess
 import passlib.hash, secrets
 import time
 from datetime import datetime
-import captcha
+import captcha, password
 
 app = Flask(__name__)
 db = DB(os.getenv('DB'))
@@ -103,7 +103,7 @@ def login():
         v = db.get_user_password(request.form['username'])
         if v is not None:
             id, hash = v
-            if verify_password(request.form['password'], hash):
+            if password.verify(request.form['password'], hash):
                 flash('Logged in', 'success')
                 session['user_id'] = id
                 return redirect(url_for('index'))
@@ -155,8 +155,8 @@ def user_edit_password():
         flash('New password must be at least 8 characters long', 'error')
     else:
         hash, = db.get_user_password_by_id(user_id)
-        if verify_password(request.form['old'], hash):
-            if db.set_user_password(user_id, hash_password(new)):
+        if password.verify(request.form['old'], hash):
+            if db.set_user_password(user_id, password.hash(new)):
                 flash('Updated password', 'success')
             else:
                 flash('Failed to update password', 'error')
@@ -361,7 +361,7 @@ def register():
             request.form['answer'],
         ):
             flash('CAPTCHA answer is incorrect', 'error')
-        elif not db.register_user(username, hash_password(password), time.time_ns()):
+        elif not db.register_user(username, password.hash(password), time.time_ns()):
             flash('Failed to create account (username may already be taken)', 'error')
         else:
             flash('Account has been created. You can login now.', 'success')
@@ -522,7 +522,7 @@ def admin_new_user():
         name, password = request.form['name'], request.form['password']
         if name == '' or password == '':
             flash('Name and password may not be empty')
-        elif db.add_user(name, hash_password(password), time.time_ns()):
+        elif db.add_user(name, password.hash(password), time.time_ns()):
             flash('Added user', 'success')
         else:
             flash('Failed to add user', 'error')
@@ -676,13 +676,6 @@ def utility_processor():
         'format_until': format_until,
         'minimd': minimd,
     }
-
-
-def hash_password(password):
-    return passlib.hash.argon2.hash(password)
-
-def verify_password(password, hash):
-    return passlib.hash.argon2.verify(password, hash)
 
 
 def restart():
