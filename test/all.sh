@@ -15,8 +15,10 @@ db=$tmp/forum.db
 . $base/../venv/bin/activate
 
 # initialize db
-$base/../init_sqlite.sh $db
+$base/../init_sqlite.sh $db --no-admin
 $SQLITE $db < $base/init_db.txt
 cd $base/..
 
-DB=$db $FLASK --app main --debug run
+export DB=$db
+export SERVER=dev
+$FLASK --app main --debug run

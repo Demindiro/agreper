@@ -5,9 +5,9 @@ PYTHON=python3
 
 set -e
 
-if [ $# != 1 ]
+if [ $# -le 1 ]
 then
-	echo "Usage: $0 <file>" >&2
+	echo "Usage: $0 <file> [--no-admin]" >&2
 	exit 1
 fi
 
@@ -17,8 +17,11 @@ then
 	exit 1
 fi
 
-read -p 'Admin username: ' username
-read -sp 'Admin password: ' password
+if [ "$2" != --no-admin ]
+then
+	read -p 'Admin username: ' username
+	read -sp 'Admin password: ' password
+fi
 
 password=$($PYTHON tool.py password "$password")
 time=$($PYTHON -c 'import time; print(time.time_ns())')
