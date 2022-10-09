@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 
-{% block content %}
+{%- block content %}
+<p>{{ minimd(description) | safe }}</p>
 <table>
 	<tr>
 		<th>Forum</th>
@@ -23,4 +24,4 @@
 	</tr>
 	{%- endfor -%}
 </table>
-{% endblock %}
+{%- endblock %}

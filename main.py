@@ -1,20 +1,24 @@
+VERSION = 'agrepy-v0.1'
+
 from flask import Flask, render_template, session, request, redirect, url_for, flash, g
 from db.sqlite import DB
-import os
-import passlib.hash
+import os, sys, subprocess
+import passlib.hash, secrets
 import time
 from datetime import datetime
 import captcha
 
 app = Flask(__name__)
 db = DB(os.getenv('DB'))
-NAME = 'Agrepy'
 
-# TODO config file
-app.config['SECRET_KEY'] = 'totally random'
-captcha_key = 'piss off bots'
-app.jinja_env.trim_blocks = True
-app.jinja_env.lstrip_blocks = True
+class Config:
+    pass
+config = Config()
+config.version, config.server_name, config.server_description, app.config['SECRET_KEY'], config.captcha_key, config.registration_enabled = db.get_config()
+
+if config.version != VERSION:
+    print(f'Incompatible version {config.version} (expected {VERSION})')
+    sys.exit(1)
 
 class Role:
     USER = 0
@@ -25,7 +29,9 @@ class Role:
 def index():
     return render_template(
         'index.html',
-        title = NAME,
+        title = config.server_name,
+        description = config.server_description,
+        config = config,
         user = get_user(),
         forums = db.get_forums()
     )
@@ -38,6 +44,7 @@ def forum(forum_id):
         'forum.html',
         title = title,
         user = get_user(),
+        config = config,
         forum_id = forum_id,
         description = description,
         threads = threads,
@@ -51,6 +58,7 @@ def thread(thread_id):
     return render_template(
         'thread.html',
         title = title,
+        config = config,
         user = get_user(),
         text = text,
         author = author,
@@ -71,6 +79,7 @@ def comment(comment_id):
     return render_template(
         'comments.html',
         title = title,
+        config = config,
         user = get_user(),
         reply_comment = reply_comment,
         comments = comments,
@@ -95,6 +104,7 @@ def login():
     return render_template(
         'login.html',
         title = 'Login',
+        config = config,
         user = get_user()
     )
 
@@ -110,7 +120,7 @@ def user_edit():
         return redirect(url_for('login'))
 
     if request.method == 'POST':
-        about = request.form['about'].replace('\r', '')
+        about = trim_text(request.form['about'])
         db.set_user_private_info(user.id, about)
         flash('Updated profile', 'success')
     else:
@@ -119,6 +129,7 @@ def user_edit():
     return render_template(
         'user_edit.html',
         title = 'Edit profile',
+        config = config,
         user = user,
         about = about
     )
@@ -129,6 +140,7 @@ def user_info(user_id):
     return render_template(
         'user_info.html',
         title = 'Profile',
+        config = config,
         user = get_user(),
         name = name,
         about = about
@@ -141,13 +153,14 @@ def new_thread(forum_id):
         return redirect(url_for('login'))
 
     if request.method == 'POST':
-        id, = db.add_thread(user_id, forum_id, request.form['title'], request.form['text'].replace('\r', ''), time.time_ns())
+        id, = db.add_thread(user_id, forum_id, request.form['title'], trim_text(request.form['text']), time.time_ns())
         flash('Created thread', 'success')
         return redirect(url_for('thread', thread_id = id))
 
     return render_template(
         'new_thread.html',
         title = 'Create new thread',
+        config = config,
         user = get_user(),
     )
 
@@ -157,6 +170,7 @@ def confirm_delete_thread(thread_id):
     return render_template(
         'confirm_delete_thread.html',
         title = 'Delete thread',
+        config = config,
         user = get_user(),
         thread_title = title,
     )
@@ -180,7 +194,7 @@ def add_comment(thread_id):
     if user_id is None:
         return redirect(url_for('login'))
 
-    if db.add_comment_to_thread(thread_id, user_id, request.form['text'].replace('\r', ''), time.time_ns()):
+    if db.add_comment_to_thread(thread_id, user_id, trim_text(request.form['text']), time.time_ns()):
         flash('Added comment', 'success')
     else:
         flash('Failed to add comment', 'error')
@@ -192,7 +206,7 @@ def add_comment_parent(comment_id):
     if user_id is None:
         return redirect(url_for('login'))
 
-    if db.add_comment_to_comment(comment_id, user_id, request.form['text'].replace('\r', ''), time.time_ns()):
+    if db.add_comment_to_comment(comment_id, user_id, trim_text(request.form['text']), time.time_ns()):
         flash('Added comment', 'success')
     else:
         flash('Failed to add comment', 'error')
@@ -204,6 +218,7 @@ def confirm_delete_comment(comment_id):
     return render_template(
         'confirm_delete_comment.html',
         title = 'Delete comment',
+        config = config,
         user = get_user(),
         thread_title = title,
         text = text,
@@ -233,7 +248,7 @@ def edit_thread(thread_id):
             thread_id,
             user_id,
             request.form['title'],
-            request.form['text'].replace('\r', ''),
+            trim_text(request.form['text']),
             time.time_ns(),
         ):
             flash('Thread has been edited', 'success')
@@ -246,6 +261,7 @@ def edit_thread(thread_id):
     return render_template(
         'edit_thread.html',
         title = 'Edit thread',
+        config = config,
         user = get_user(),
         thread_title = title,
         text = text,
@@ -261,7 +277,7 @@ def edit_comment(comment_id):
         if db.modify_comment(
             comment_id,
             user_id,
-            request.form['text'].replace('\r', ''),
+            trim_text(request.form['text']),
             time.time_ns(),
         ):
             flash('Comment has been edited', 'success')
@@ -274,6 +290,7 @@ def edit_comment(comment_id):
     return render_template(
         'edit_comment.html',
         title = 'Edit comment',
+        config = config,
         user = get_user(),
         thread_title = title,
         text = text,
@@ -288,7 +305,7 @@ def register():
         elif len(password) < 8:
             flash('Password must be at least 8 characters long', 'error')
         elif not captcha.verify(
-            captcha_key,
+            config.captcha_key,
             request.form['captcha'],
             request.form['answer'],
         ):
@@ -299,10 +316,11 @@ def register():
             flash('Account has been created. You can login now.', 'success')
             return redirect(url_for('index'))
 
-    capt, answer = captcha.generate(captcha_key)
+    capt, answer = captcha.generate(config.captcha_key)
     return render_template(
         'register.html',
         title = 'Register',
+        config = config,
         user = get_user(),
         captcha = capt,
         answer = answer,
@@ -310,43 +328,47 @@ def register():
 
 @app.route('/admin/')
 def admin():
-    user = get_user()
-    if user is None:
-        return redirect(url_for('login'))
-    if not user.is_admin():
-        return '<h1>Forbidden</h1>', 403
+    chk, user = _admin_check()
+    if not chk:
+        return user
 
     return render_template(
         'admin/index.html',
         title = 'Admin panel',
+        config = config,
         forums = db.get_forums(),
         users = db.get_users(),
     )
 
 @app.route('/admin/query/', methods = ['GET', 'POST'])
 def admin_query():
-    user = get_user()
-    if user is None:
-        return redirect(url_for('login'))
-    if not user.is_admin():
-        return '<h1>Forbidden</h1>', 403
+    chk, user = _admin_check()
+    if not chk:
+        return user
 
     try:
-        rows = db.query(request.form['q']) if request.method == 'POST' else []
+        rows, rowcount = db.query(request.form['q']) if request.method == 'POST' else []
+        if rowcount > 0:
+            flash(f'{rowcount} rows changed', 'success')
     except Exception as e:
         flash(e, 'error')
         rows = []
     return render_template(
         'admin/query.html',
         title = 'Query',
+        config = config,
         rows = rows,
     )
 
 @app.route('/admin/forum/<int:forum_id>/edit/<string:what>/', methods = ['POST'])
 def admin_edit_forum(forum_id, what):
+    chk, user = _admin_check()
+    if not chk:
+        return user
+
     try:
         if what == 'description':
-            res = db.set_forum_description(forum_id, request.form['description'].replace('\r', ''))
+            res = db.set_forum_description(forum_id, trim_text(request.form['description']))
         elif what == 'name':
             res = db.set_forum_name(forum_id, request.form['name'])
         else:
@@ -362,12 +384,59 @@ def admin_edit_forum(forum_id, what):
 
 @app.route('/admin/forum/new/', methods = ['POST'])
 def admin_new_forum():
+    chk, user = _admin_check()
+    if not chk:
+        return user
+
     try:
-        db.add_forum(request.form['name'], request.form['description'].replace('\r', ''))
+        db.add_forum(request.form['name'], trim_text(request.form['description']))
         flash('Added forum', 'success')
     except Exception as e:
         flash(str(e), 'error')
     return redirect(url_for('admin'))
+
+@app.route('/admin/config/edit/', methods = ['POST'])
+def admin_edit_config():
+    print('what')
+    chk, user = _admin_check()
+    if not chk:
+        return user
+
+    try:
+        db.set_config(
+            request.form['server_name'],
+            trim_text(request.form['server_description']),
+            'registration_enabled' in request.form,
+        )
+        flash('Updated config. Refresh the page to see the changes.', 'success')
+        restart()
+    except Exception as e:
+        flash(str(e), 'error')
+    return redirect(url_for('admin'))
+
+@app.route('/admin/config/new_secrets/', methods = ['POST'])
+def admin_new_secrets():
+    chk, user = _admin_check()
+    if not chk:
+        return user
+
+    secret_key = secrets.token_urlsafe(30)
+    captcha_key = secrets.token_urlsafe(30)
+    try:
+        db.set_config_secrets(secret_key, captcha_key)
+        flash('Changed secrets. You will be logged out.', 'success')
+        restart()
+    except Exception as e:
+        flash(str(e), 'error')
+    return redirect(url_for('admin'))
+
+def _admin_check():
+    user = get_user()
+    if user is None:
+        return False, redirect(url_for('login'))
+    if not user.is_admin():
+        return False, ('<h1>Forbidden</h1>', 403)
+    return True, user
 
 
 class Comment:
@@ -494,3 +563,24 @@ def hash_password(password):
 
 def verify_password(password, hash):
     return passlib.hash.argon2.verify(password, hash)
+
+
+def restart():
+    '''
+    Shut down *all* workers and spawn new ones.
+    This is necessary on e.g. a configuration change.
+
+    Since restarting workers depends is platform-dependent this task is delegated to an external
+    program.
+    '''
+    r = subprocess.call(['./restart.sh'])
+    if r == 0:
+        flash('Restart script exited successfully', 'success')
+    else:
+        flash(f'Restart script exited with error (code {r})', 'error')
+
+def trim_text(s):
+    '''
+    Because browsers LOVE \\r, trailing whitespace etc.
+    '''
+    return s.strip().replace('\r', '')

@@ -5,6 +5,12 @@ class DB:
         self.conn = conn
         pass
 
+    def get_config(self):
+        return self._db().execute('''
+            select version, name, description, secret_key, captcha_key, registration_enabled from config
+            '''
+        ).fetchone()
+
     def get_forums(self):
         return self._db().execute('''
             select f.forum_id, name, description, thread_id, title, update_time
@@ -329,6 +335,7 @@ class DB:
             c.execute('''
                 insert into users(name, password, join_time)
                 values (lower(?), ?, ?)
+                where (select registration_enabled from config)
                 ''',
                 (username, password, time)
             )
@@ -375,6 +382,22 @@ class DB:
         )
         db.commit()
 
+    def set_config(self, server_name, server_description, registration_enabled):
+        return self.change_one('''
+            update config
+            set name = ?, description = ?, registration_enabled = ?
+            ''',
+            (server_name, server_description, registration_enabled)
+        )
+
+    def set_config_secrets(self, secret_key, captcha_key):
+        return self.change_one('''
+            update config
+            set secret_key = ?, captcha_key = ?
+            ''',
+            (secret_key, captcha_key)
+        )
+
     def change_one(self, query, values):
         db = self._db()
         c = db.cursor()
@@ -385,7 +408,11 @@ class DB:
         return False
 
     def query(self, q):
-        return self._db().execute(q)
+        db = self._db()
+        c = db.cursor()
+        rows = c.execute(q)
+        db.commit()
+        return rows, c.rowcount
 
     def _db(self):
         return sqlite3.connect(self.conn)

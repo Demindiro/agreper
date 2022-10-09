@@ -7,22 +7,28 @@
 <input type=submit value=Submit>
 </form>
 <h2>Configuration</h2>
+<form action=config/edit/ method=post>
 <table>
 <tr>
-<td>Name</td>
-<td>
-<input type=text value="Agrepy">
-<input type=submit value=Set>
-</td>
+<td>Server name</td>
+<td><input type=text name=server_name value="{{ config.server_name }}"></td>
 </tr>
 <tr>
-<td>Registrations enabled</td>
-<td>
-<input type=checkbox checked>
-<input type=submit value=Set>
-</td>
+<td>Server description</td>
+<td><textarea name=server_description>{{ config.server_description }}</textarea></td>
+</tr>
+<tr>
+<td>Registration enabled</td>
+<td><input name=registration_enabled type=checkbox {{ 'checked' if config.registration_enabled else '' }}></td>
 </tr>
 </table>
+<input type=submit value=Update>
+</form>
+<p>
+<form action=config/new_secrets/ method=post>
+<input type=submit value="Generate new secrets">
+</form>
+</p>
 <h2>Forums</h2>
 <table>
 <tr>

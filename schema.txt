@@ -1,3 +1,12 @@
+create table config (
+	version                text     not null,
+	name                   text     not null,
+	description            text     not null,
+	secret_key             text     not null,
+	captcha_key            text     not null,
+	registration_enabled   boolean  not null
+);
+
 create table users (
 	user_id    integer       unique  not null  primary key  autoincrement,
 	name       varchar(32)   unique  not null,
