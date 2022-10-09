@@ -173,7 +173,11 @@ def new_thread(forum_id):
         return redirect(url_for('login'))
 
     if request.method == 'POST':
-        id = db.add_thread(user_id, forum_id, request.form['title'], trim_text(request.form['text']), time.time_ns())
+        title, text = request.form['title'], trim_text(request.form['text'])
+        if title == '' or text == '':
+            flash('Title and text may not be empty', 'error')
+            return redirect(url_for('forum', forum_id = forum_id))
+        id = db.add_thread(user_id, forum_id, title, text, time.time_ns())
         if id is None:
             flash('Failed to create thread', 'error')
             return redirect(url_for('forum', forum_id = forum_id))
@@ -219,7 +223,10 @@ def add_comment(thread_id):
     if user_id is None:
         return redirect(url_for('login'))
 
-    if db.add_comment_to_thread(thread_id, user_id, trim_text(request.form['text']), time.time_ns()):
+    text = trim_text(request.form['text'])
+    if text == '':
+        flash('Text may not be empty', 'error')
+    elif db.add_comment_to_thread(thread_id, user_id, text, time.time_ns()):
         flash('Added comment', 'success')
     else:
         flash('Failed to add comment', 'error')
@@ -231,7 +238,10 @@ def add_comment_parent(comment_id):
     if user_id is None:
         return redirect(url_for('login'))
 
-    if db.add_comment_to_comment(comment_id, user_id, trim_text(request.form['text']), time.time_ns()):
+    text = trim_text(request.form['text'])
+    if text == '':
+        flash('Text may not be empty', 'error')
+    elif db.add_comment_to_comment(comment_id, user_id, text, time.time_ns()):
         flash('Added comment', 'success')
     else:
         flash('Failed to add comment', 'error')
@@ -269,11 +279,14 @@ def edit_thread(thread_id):
         return redirect(url_for('login'))
 
     if request.method == 'POST':
-        if db.modify_thread(
+        title, text = request.form['title'], trim_text(request.form['text'])
+        if title == '' or text == '':
+            flash('Title and text may not be empty', 'error')
+        elif db.modify_thread(
             thread_id,
             user_id,
-            request.form['title'],
-            trim_text(request.form['text']),
+            title,
+            text,
             time.time_ns(),
         ):
             flash('Thread has been edited', 'success')
@@ -299,7 +312,10 @@ def edit_comment(comment_id):
         return redirect(url_for('login'))
 
     if request.method == 'POST':
-        if db.modify_comment(
+        text = trim_text(request.form['text'])
+        if text == '':
+            flash('Text may not be empty', 'error')
+        elif db.modify_comment(
             comment_id,
             user_id,
             trim_text(request.form['text']),
@@ -494,7 +510,9 @@ def admin_unban_user(user_id):
 def admin_new_user():
     try:
         name, password = request.form['name'], request.form['password']
-        if db.add_user(name, hash_password(password), time.time_ns()):
+        if name == '' or password == '':
+            flash('Name and password may not be empty')
+        elif db.add_user(name, hash_password(password), time.time_ns()):
             flash('Added user', 'success')
         else:
             flash('Failed to add user', 'error')
