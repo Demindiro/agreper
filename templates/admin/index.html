@@ -76,29 +76,34 @@
 <th>Name</th>
 <th>Join date</th>
 <th>Role</th>
-<th>Banned until</th>
-<th>Actions</th>
+<th>Banned</th>
 </tr>
 {%- for id, name, join_date, role, banned_until in users -%}
 <tr>
 <td>{{ id }}</td>
 <td>{{ name }}</td>
 <td>{{ format_time(join_date) }}</td>
-<td>{{ ['user', 'moderator', 'admin'][role] if role >= 0 and role <= 2 else role }}</td>
-<td>{{ '' if banned_until is none else format_time(banned_until) }}</td>
 <td>
-<form method=post action="user/{{ id }}/edit/ban/">
+<form method=post action="user/{{ id }}/edit/role/">
+<select name=role>
+<option value=0 {{ 'selected' if role == 0 else '' }}>user</option>
+<option value=1 {{ 'selected' if role == 1 else '' }}>moderator</option>
+<option value=2 {{ 'selected' if role == 2 else '' }}>admin</option>
+</select>
+<input type=submit value="Set role">
+</form>
+</td>
+<td>
+{% if banned_until is not none %}
+<form method=post action="user/{{ id }}/unban/">
+{{- format_time(banned_until) }}
+<input type=submit value=Unban>
+</form>
+{% endif %}
+<form method=post action="user/{{ id }}/ban/">
 <input type=number name=days placeholder=days>
 <input type=time name=time>
 <input type=submit value=Ban>
-</form>
-<form method=post action="user/{{ id }}/edit/role/">
-<select name=role>
-<option value=0>user</option>
-<option value=1>moderator</option>
-<option value=2>admin</option>
-</select>
-<input type=submit value="Set role">
 </form>
 </td>
 </tr>

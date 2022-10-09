@@ -10,7 +10,10 @@
 		<a class=logo href="{{ url_for('index') }}">A</a>
 		<div style="margin:auto"></div>
 		{%- if user is not none -%}
-		<a href="{{ url_for('user_edit') }}">{{ user.name }}</a>
+		<a href="{{ url_for('user_edit') }}">
+		{{- user.name }}
+		{%- if user.is_banned() %} (banned for {{ format_until(user.banned_until) }}){% endif -%}
+		</a>
 		<span> | </span>
 		{%- if user.is_admin() -%}
 		<a href="{{ url_for('admin') }}">Admin panel</a>

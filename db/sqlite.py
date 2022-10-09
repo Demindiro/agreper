@@ -164,9 +164,9 @@ class DB:
         )
         db.commit()
 
-    def get_user_name_role(self, user_id):
+    def get_user_name_role_banned(self, user_id):
         return self._db().execute('''
-            select name, role
+            select name, role, banned_until
             from users
             where user_id = ?
             ''',
@@ -188,11 +188,15 @@ class DB:
         c.execute('''
             insert into threads (author_id, forum_id, title, text,
                 create_time, modify_time, update_time)
-            values (?, ?, ?, ?, ?, ?, ?)
+            select ?, ?, ?, ?, ?, ?, ?
+            from users
+            where user_id = ? and banned_until < ?
             ''',
-            (author_id, forum_id, title, text, time, time, time)
+            (author_id, forum_id, title, text, time, time, time, author_id, time)
         )
         rowid = c.lastrowid
+        if rowid is None:
+            return None
         db.commit()
         return db.execute('''
             select thread_id
@@ -245,10 +249,10 @@ class DB:
         c.execute('''
             insert into comments(thread_id, author_id, text, create_time, modify_time)
             select ?, ?, ?, ?, ?
-            from threads
-            where thread_id = ?
+            from threads, users
+            where thread_id = ? and user_id = ? and banned_until < ?
             ''',
-            (thread_id, author_id, text, time, time, thread_id)
+            (thread_id, author_id, text, time, time, thread_id, author_id, time)
         )
         if c.rowcount > 0:
             print('SHIT')
@@ -269,10 +273,10 @@ class DB:
         c.execute('''
             insert into comments(thread_id, parent_id, author_id, text, create_time, modify_time)
             select thread_id, ?, ?, ?, ?, ?
-            from comments
-            where comment_id = ?
+            from comments, users
+            where comment_id = ? and user_id = ? and banned_until < ?
             ''',
-            (parent_id, author_id, text, time, time, parent_id)
+            (parent_id, author_id, text, time, time, parent_id, author_id, time)
         )
         if c.rowcount > 0:
             c.execute('''
@@ -297,12 +301,17 @@ class DB:
             update threads
             set title = ?, text = ?, modify_time = ?
             where thread_id = ? and (
-              author_id = ?
+              (author_id = ? and (select 1 from users where user_id = ? and banned_until < ?))
               -- 1 = moderator, 2 = admin
               or (select 1 from users where user_id = ? and (role = 1 or role = 2))
             )
             ''',
-            (title, text, time, thread_id, user_id, user_id)
+            (
+                title, text, time,
+                thread_id,
+                user_id, user_id, time,
+                user_id,
+            )
         )
         if c.rowcount > 0:
             db.commit()
@@ -316,12 +325,17 @@ class DB:
             update comments
             set text = ?, modify_time = ?
             where comment_id = ? and (
-              author_id = ?
+              (author_id = ? and (select 1 from users where user_id = ? and banned_until < ?))
               -- 1 = moderator, 2 = admin
               or (select 1 from users where user_id = ? and (role = 1 or role = 2))
             )
             ''',
-            (text, time, comment_id, user_id, user_id)
+            (
+                text, time,
+                comment_id,
+                user_id, user_id, time,
+                user_id,
+            )
         )
         if c.rowcount > 0:
             db.commit()
@@ -398,6 +412,15 @@ class DB:
             (secret_key, captcha_key)
         )
 
+    def set_user_ban(self, user_id, until):
+        return self.change_one('''
+            update users
+            set banned_until = ?
+            where user_id = ?
+            ''',
+            (until, user_id)
+        )
+
     def change_one(self, query, values):
         db = self._db()
         c = db.cursor()
@@ -415,4 +438,4 @@ class DB:
         return rows, c.rowcount
 
     def _db(self):
-        return sqlite3.connect(self.conn)
+        return sqlite3.connect(self.conn, timeout=5)

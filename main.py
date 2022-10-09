@@ -153,9 +153,14 @@ def new_thread(forum_id):
         return redirect(url_for('login'))
 
     if request.method == 'POST':
-        id, = db.add_thread(user_id, forum_id, request.form['title'], trim_text(request.form['text']), time.time_ns())
-        flash('Created thread', 'success')
-        return redirect(url_for('thread', thread_id = id))
+        id = db.add_thread(user_id, forum_id, request.form['title'], trim_text(request.form['text']), time.time_ns())
+        if id is None:
+            flash('Failed to create thread', 'error')
+            return redirect(url_for('forum', forum_id = forum_id))
+        else:
+            id, = id
+            flash('Created thread', 'success')
+            return redirect(url_for('thread', thread_id = id))
 
     return render_template(
         'new_thread.html',
@@ -430,6 +435,42 @@ def admin_new_secrets():
         flash(str(e), 'error')
     return redirect(url_for('admin'))
 
+@app.route('/admin/user/<int:user_id>/ban/', methods = ['POST'])
+def admin_ban_user(user_id):
+    chk, user = _admin_check()
+    if not chk:
+        return user
+
+    d, t = request.form['days'], request.form['time']
+    d = 0 if d == '' else int(d)
+    h, m = (0, 0) if t == '' else map(int, t.split(':'))
+    until = time.time_ns() + (d * 24 * 60 + h * 60 + m) * (60 * 10**9)
+    until = min(until, 0xffff_ffff_ffff_ffff)
+
+    try:
+        if db.set_user_ban(user_id, until):
+            flash('Banned user', 'success')
+        else:
+            flash('Failed to ban user', 'error')
+    except Exception as e:
+        flash(str(e), 'error')
+    return redirect(url_for('admin'))
+
+@app.route('/admin/user/<int:user_id>/unban/', methods = ['POST'])
+def admin_unban_user(user_id):
+    chk, user = _admin_check()
+    if not chk:
+        return user
+
+    try:
+        if db.set_user_ban(user_id, None):
+            flash('Unbanned user', 'success')
+        else:
+            flash('Failed to unban user', 'error')
+    except Exception as e:
+        flash(str(e), 'error')
+    return redirect(url_for('admin'))
+
 def _admin_check():
     user = get_user()
     if user is None:
@@ -480,10 +521,11 @@ def create_comment_tree(comments):
 
 
 class User:
-    def __init__(self, id, name, role):
+    def __init__(self, id, name, role, banned_until):
         self.id = id
         self.name = name
         self.role = role
+        self.banned_until = banned_until
 
     def is_moderator(self):
         return self.role in (Role.ADMIN, Role.MODERATOR)
@@ -491,54 +533,64 @@ class User:
     def is_admin(self):
         return self.role == Role.ADMIN
 
+    def is_banned(self):
+        return self.banned_until is not None and self.banned_until > time.time_ns()
+
 def get_user():
     id = session.get('user_id')
     if id is not None:
-        name, role = db.get_user_name_role(id)
-        return User(id, name, role)
+        name, role, banned_until = db.get_user_name_role_banned(id)
+        return User(id, name, role, banned_until)
     return None
 
 
 @app.context_processor
 def utility_processor():
-    def format_since(t):
-        n = time.time_ns()
-        if n < t:
-            return 'In a distant future'
-
+    def _format_time_delta(n, t):
         # Try the sane thing first
         dt = (n - t) // 10 ** 9
         if dt < 1:
-            return "less than a second ago"
+            return "less than a second"
         if dt < 2:
-            return f"1 second ago"
+            return f"1 second"
         if dt < 60:
-            return f"{dt} seconds ago"
+            return f"{dt} seconds"
         if dt < 119:
-            return f"1 minute ago"
+            return f"1 minute"
         if dt < 3600:
-            return f"{dt // 60} minutes ago"
+            return f"{dt // 60} minutes"
         if dt < 3600 * 2:
-            return f"1 hour ago"
+            return f"1 hour"
         if dt < 3600 * 24:
-            return f"{dt // 3600} hours ago"
+            return f"{dt // 3600} hours"
         if dt < 3600 * 24 * 31:
-            return f"{dt // (3600 * 24)} days ago"
+            return f"{dt // (3600 * 24)} days"
 
         # Try some very rough estimate, whatever
         f = lambda x: datetime.utcfromtimestamp(x // 10 ** 9)
         n, t = f(n), f(t)
         def f(x, y, s):
-            return f'{y - x} {s}{"s" if y - x > 1 else ""} ago'
+            return f'{y - x} {s}{"s" if y - x > 1 else ""}'
         if t.year < n.year:
             return f(t.year, n.year, "year")
         if t.month < n.month:
             return f(t.month, n.month, "month")
-        # This shouldn't be reachable, but it's still better to return something
-        return "incredibly long ago"
+        assert False, 'unreachable'
+
+    def format_since(t):
+        n = time.time_ns()
+        if n < t:
+            return 'in a distant future'
+        return _format_time_delta(n, t) + ' ago'
+
+    def format_until(t):
+        n = time.time_ns()
+        if t <= n:
+            return 'in a distant past'
+        return _format_time_delta(t, n)
 
     def format_time(t):
-        return datetime.utcfromtimestamp(t / 10 ** 9)
+        return datetime.utcfromtimestamp(t / 10 ** 9).replace(microsecond=0)
 
     def minimd(text):
         # Replace angle brackets to prevent XSS
@@ -554,6 +606,7 @@ def utility_processor():
     return {
         'format_since': format_since,
         'format_time': format_time,
+        'format_until': format_until,
         'minimd': minimd,
     }
 
