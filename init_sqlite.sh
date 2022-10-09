@@ -5,6 +5,9 @@ PYTHON=python3
 
 set -e
 
+make
+. ./venv/bin/activate
+
 if [ $# -le 0 ]
 then
 	echo "Usage: $0 <file> [--no-admin]" >&2

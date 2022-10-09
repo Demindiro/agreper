@@ -14,6 +14,8 @@ then
 	exit 1
 fi
 
+. ./venv/bin/activate
+
 export DB="$1"
 export SERVER=gunicorn
 export PID="$2"

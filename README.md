@@ -13,7 +13,6 @@ First clone or [download the latest release](https://github.com/Demindiro/agrepe
 Then setup with:
 
 ```
-make
 ./init_sqlite.sh forum.db
 ```
 
