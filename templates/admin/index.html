@@ -114,4 +114,12 @@
 </tr>
 {%- endfor -%}
 </table>
+<h3>Add user</h3>
+<form method=post action=user/new/>
+<table>
+<tr><td>Name</td><td><input type=text name=name></td></tr>
+<tr><td>Password</td><td><input type=password name=password></td></tr>
+</table>
+<input type=submit value="Add user">
+</form>
 {%- endblock %}

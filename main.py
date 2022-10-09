@@ -335,7 +335,7 @@ def register():
             request.form['answer'],
         ):
             flash('CAPTCHA answer is incorrect', 'error')
-        elif not db.add_user(username, hash_password(password), time.time_ns()):
+        elif not db.register_user(username, hash_password(password), time.time_ns()):
             flash('Failed to create account (username may already be taken)', 'error')
         else:
             flash('Account has been created. You can login now.', 'success')
@@ -487,6 +487,18 @@ def admin_unban_user(user_id):
             flash('Unbanned user', 'success')
         else:
             flash('Failed to unban user', 'error')
+    except Exception as e:
+        flash(str(e), 'error')
+    return redirect(url_for('admin'))
+
+@app.route('/admin/user/new/', methods = ['POST'])
+def admin_new_user():
+    try:
+        name, password = request.form['name'], request.form['password']
+        if db.add_user(name, hash_password(password), time.time_ns()):
+            flash('Added user', 'success')
+        else:
+            flash('Failed to add user', 'error')
     except Exception as e:
         flash(str(e), 'error')
     return redirect(url_for('admin'))

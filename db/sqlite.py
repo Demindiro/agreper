@@ -360,7 +360,10 @@ class DB:
             return True
         return False
 
-    def add_user(self, username, password, time):
+    def register_user(self, username, password, time):
+        '''
+        Add a user if registrations are enabled.
+        '''
         try:
             db = self._db()
             c = db.cursor()
@@ -369,6 +372,27 @@ class DB:
                 select lower(?), ?, ?
                 from config
                 where registration_enabled = 1
+                ''',
+                (username, password, time)
+            )
+            if c.rowcount > 0:
+                db.commit()
+                return True
+            return False
+        except sqlite3.IntegrityError:
+            # User already exists, probably
+            return False
+
+    def add_user(self, username, password, time):
+        '''
+        Add a user without checking if registrations are enabled.
+        '''
+        try:
+            db = self._db()
+            c = db.cursor()
+            c.execute('''
+                insert into users(name, password, join_time)
+                values (lower(?), ?, ?)
                 ''',
                 (username, password, time)
             )
