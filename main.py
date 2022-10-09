@@ -8,7 +8,7 @@ import os, sys, subprocess
 import passlib.hash, secrets
 import time
 from datetime import datetime
-import captcha, password
+import captcha, password, minimd
 
 app = Flask(__name__)
 db = DB(os.getenv('DB'))
@@ -659,22 +659,11 @@ def utility_processor():
     def format_time(t):
         return datetime.utcfromtimestamp(t / 10 ** 9).replace(microsecond=0)
 
-    def minimd(text):
-        # Replace angle brackets to prevent XSS
-        # Also replace ampersands to prevent surprises.
-        text = text.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
-        # Split into paragraphs
-        paragraphs = map(lambda l: l.strip('\n'), text.split('\n\n'))
-        paragraphs = map(lambda l: l if not l.startswith('  ') else f'<pre>{l}</pre>', paragraphs)
-        paragraphs = map(lambda l: f'<p>{l}</p>', paragraphs)
-        # Glue together again
-        return ''.join(paragraphs)
-
     return {
         'format_since': format_since,
         'format_time': format_time,
         'format_until': format_until,
-        'minimd': minimd,
+        'minimd': minimd.html,
     }
 
 

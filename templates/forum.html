@@ -9,7 +9,7 @@
 {%- endmacro -%}
 
 {% block content -%}
-<p>{{ description }}</p>
+<p>{{ minimd(description) | safe }}</p>
 <p><a href="{{ url_for('new_thread', forum_id = forum_id) }}">Create thread</a></p>
 {{- nav() -}}
 <table>

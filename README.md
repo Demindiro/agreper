@@ -8,6 +8,12 @@ Agreper is a forum board with a focus on being easy to set up and manage.
 
 ### Linux
 
+Ensure you have the necessary packages, e.g. for Debian:
+
+```
+apt install git make sqlite3 python3-venv python3-pip
+```
+
 First clone or [download the latest release](https://github.com/Demindiro/agreper/archive/refs/tags/v0.1.tar.gz).
 
 Then setup with:
