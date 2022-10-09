@@ -5,7 +5,7 @@ PYTHON=python3
 
 set -e
 
-if [ $# -le 1 ]
+if [ $# -le 0 ]
 then
 	echo "Usage: $0 <file> [--no-admin]" >&2
 	exit 1
