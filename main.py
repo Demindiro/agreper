@@ -422,7 +422,6 @@ def admin_new_forum():
 
 @app.route('/admin/config/edit/', methods = ['POST'])
 def admin_edit_config():
-    print('what')
     chk, user = _admin_check()
     if not chk:
         return user
@@ -534,8 +533,6 @@ class Comment:
         self.parent_id = parent_id
 
 def create_comment_tree(comments):
-    comments = [*comments]
-    print(comments)
     start = time.time();
     # Collect comments first, then build the tree in case we encounter a child before a parent
     comment_map = {
@@ -576,7 +573,7 @@ class User:
         return self.role == Role.ADMIN
 
     def is_banned(self):
-        return self.banned_until is not None and self.banned_until > time.time_ns()
+        return self.banned_until > time.time_ns()
 
 def get_user():
     id = session.get('user_id')

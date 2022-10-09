@@ -99,12 +99,12 @@
 </form>
 </td>
 <td>
-{% if banned_until is not none %}
+{%- if banned_until > 0 -%}
 <form method=post action="user/{{ id }}/unban/">
 {{- format_time(banned_until) }}
 <input type=submit value=Unban>
 </form>
-{% endif %}
+{%- endif -%}
 <form method=post action="user/{{ id }}/ban/">
 <input type=number name=days placeholder=days>
 <input type=time name=time>

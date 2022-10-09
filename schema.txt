@@ -14,7 +14,7 @@ create table users (
 	about      text          not null  default '',
 	join_time  integer       not null,
 	role       integer       not null  default 0,
-	banned_until integer
+	banned_until integer     not null  default 0
 );
 
 create table threads (
