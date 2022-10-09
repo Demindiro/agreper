@@ -366,8 +366,9 @@ class DB:
             c = db.cursor()
             c.execute('''
                 insert into users(name, password, join_time)
-                values (lower(?), ?, ?)
-                where (select registration_enabled from config)
+                select lower(?), ?, ?
+                from config
+                where registration_enabled = 1
                 ''',
                 (username, password, time)
             )
