@@ -1,13 +1,21 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<p><a href="{{ url_for('user_info', user_id = session['user_id']) }}">View public profile</a></p>
+<p><a href="{{ url_for('user_info', user_id = user.id) }}">View public profile</a></p>
 <form method="post">
 <table>
-<tr><td>Username</td><td>{{ name }}</td></tr>
-<tr><td>ID</td><td>{{ session['user_id'] }}</td></tr>
+<tr><td>Username</td><td>{{ user.name }}</td></tr>
+<tr><td>ID</td><td>{{ user.id }}</td></tr>
 <tr><td>About</td><td><textarea name="about">{{ about }}</textarea></td></tr>
-</form>
 </table>
 <input type="submit" value="Update">
+</form>
+<br>
+<form method="post" action=edit/password/>
+<table>
+<tr><td>Old password</td><td><input type=password name=old></td></tr>
+<tr><td>New password</td><td><input type=password name=new></td></tr>
+</table>
+<input type="submit" value="Set password">
+</form>
 {% endblock %}

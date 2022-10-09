@@ -1,8 +1,17 @@
 {% extends 'base.html' %}
 
-{% block content %}
+{%- macro nav() -%}
+<p style=text-align:center>
+{%- if prev_page is not none %}<a href="./?p={{ prev_page }}">prev</a>{% endif -%}
+{%- if prev_page is not none and next_page is not none %} | {% endif -%}
+{%- if next_page is not none %}<a href="./?p={{ next_page }}">next</a>{% endif -%}
+</p>
+{%- endmacro -%}
+
+{% block content -%}
 <p>{{ description }}</p>
 <p><a href="{{ url_for('new_thread', forum_id = forum_id) }}">Create thread</a></p>
+{{- nav() -}}
 <table>
 	<tr>
 		<th>Topic</th>
@@ -19,6 +28,7 @@
 		<td>{{ format_since(utime) }}</td>
 		<td>{{ comment_count }}</td>
 	</tr>
-	{% endfor %}
+	{%- endfor -%}
 </table>
+{{- nav() -}}
 {% endblock %}

@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 
-{% block content %}
+{%- block content %}
+<p>{{ minimd(description) | safe }}</p>
 <table>
 	<tr>
 		<th>Forum</th>
@@ -10,7 +11,7 @@
 	<tr>
 		<td>
 			<p><a href="{{ url_for('forum', forum_id = id) }}"><b>{{ name }}</b></a></p>
-			<p>{{ description }}</p>
+			<p>{{ minimd(description) | safe }}</p>
 		</td>
 		{% if t_id %}
 		<td>
@@ -21,6 +22,6 @@
 		<td>No threads</td>
 		{% endif %}
 	</tr>
-	{% endfor %}
+	{%- endfor -%}
 </table>
-{% endblock %}
+{%- endblock %}

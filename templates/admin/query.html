@@ -1,0 +1,17 @@
+{% extends 'admin/base.html' -%}
+{% block content -%}
+<form method=post>
+<input type=text name=q placeholder="SELECT * from users">
+<input type=submit value=Submit>
+</form>
+<table style="font-family:monospace;white-space:pre">
+{%- for r in rows -%}
+<tr>
+{%- for c in r -%}
+<td>{{ c }}</td>
+{%- endfor -%}
+</tr>
+{%- endfor -%}
+</table>
+{%- endblock -%}
+

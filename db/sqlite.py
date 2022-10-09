@@ -5,6 +5,12 @@ class DB:
         self.conn = conn
         pass
 
+    def get_config(self):
+        return self._db().execute('''
+            select version, name, description, secret_key, captcha_key, registration_enabled from config
+            '''
+        ).fetchone()
+
     def get_forums(self):
         return self._db().execute('''
             select f.forum_id, name, description, thread_id, title, update_time
@@ -29,15 +35,18 @@ class DB:
             (forum_id,)
         ).fetchone()
 
-    def get_threads(self, forum_id):
+    def get_threads(self, forum_id, offset, limit):
         return self._db().execute('''
             select t.thread_id, title, t.create_time, t.update_time, t.author_id, name, count(c.thread_id)
             from threads t, users
             left join comments c on t.thread_id = c.thread_id
             where forum_id = ? and user_id = t.author_id
             group by t.thread_id
+            order by t.update_time desc
+            limit ?
+            offset ?
             ''',
-            (forum_id,)
+            (forum_id, limit, offset)
         )
 
     def get_thread(self, thread):
@@ -129,6 +138,24 @@ class DB:
             (username,)
         ).fetchone()
 
+    def get_user_password_by_id(self, user_id):
+        return self._db().execute('''
+            select password
+            from users
+            where user_id = ?
+            ''',
+            (user_id,)
+        ).fetchone()
+
+    def set_user_password(self, user_id, password):
+        return self.change_one('''
+            update users
+            set password = ?
+            where user_id = ?
+            ''',
+            (password, user_id)
+        )
+
     def get_user_public_info(self, user_id):
         return self._db().execute('''
             select name, about
@@ -140,7 +167,7 @@ class DB:
 
     def get_user_private_info(self, user_id):
         return self._db().execute('''
-            select name, about
+            select about
             from users
             where user_id = ?
             ''',
@@ -158,6 +185,15 @@ class DB:
         )
         db.commit()
 
+    def get_user_name_role_banned(self, user_id):
+        return self._db().execute('''
+            select name, role, banned_until
+            from users
+            where user_id = ?
+            ''',
+            (user_id,)
+        ).fetchone()
+
     def get_user_name(self, user_id):
         return self._db().execute('''
             select name
@@ -173,11 +209,15 @@ class DB:
         c.execute('''
             insert into threads (author_id, forum_id, title, text,
                 create_time, modify_time, update_time)
-            values (?, ?, ?, ?, ?, ?, ?)
+            select ?, ?, ?, ?, ?, ?, ?
+            from users
+            where user_id = ? and banned_until < ?
             ''',
-            (author_id, forum_id, title, text, time, time, time)
+            (author_id, forum_id, title, text, time, time, time, author_id, time)
         )
         rowid = c.lastrowid
+        if rowid is None:
+            return None
         db.commit()
         return db.execute('''
             select thread_id
@@ -193,9 +233,13 @@ class DB:
         c.execute('''
             delete
             from threads
-            where thread_id = ? and author_id = ?
+            -- 1 = moderator, 2 = admin
+            where thread_id = ? and (
+              author_id = ?
+              or (select 1 from users where user_id = ? and (role = 1 or role = 2))
+            )
             ''',
-            (thread_id, user_id)
+            (thread_id, user_id, user_id)
         )
         db.commit()
         return c.rowcount > 0
@@ -206,9 +250,16 @@ class DB:
         c.execute('''
             delete
             from comments
-            where comment_id = ? and author_id = ?
+            where comment_id = ?
+              and (
+                author_id = ?
+                -- 1 = moderator, 2 = admin
+                or (select 1 from users where user_id = ? and (role = 1 or role = 2))
+              )
+              -- Don't allow deleting comments with children
+              and (select 1 from comments where parent_id = ?) is null
             ''',
-            (comment_id, user_id)
+            (comment_id, user_id, user_id, comment_id)
         )
         db.commit()
         return c.rowcount > 0
@@ -219,10 +270,10 @@ class DB:
         c.execute('''
             insert into comments(thread_id, author_id, text, create_time, modify_time)
             select ?, ?, ?, ?, ?
-            from threads
-            where thread_id = ?
+            from threads, users
+            where thread_id = ? and user_id = ? and banned_until < ?
             ''',
-            (thread_id, author_id, text, time, time, thread_id)
+            (thread_id, author_id, text, time, time, thread_id, author_id, time)
         )
         if c.rowcount > 0:
             print('SHIT')
@@ -243,10 +294,10 @@ class DB:
         c.execute('''
             insert into comments(thread_id, parent_id, author_id, text, create_time, modify_time)
             select thread_id, ?, ?, ?, ?, ?
-            from comments
-            where comment_id = ?
+            from comments, users
+            where comment_id = ? and user_id = ? and banned_until < ?
             ''',
-            (parent_id, author_id, text, time, time, parent_id)
+            (parent_id, author_id, text, time, time, parent_id, author_id, time)
         )
         if c.rowcount > 0:
             c.execute('''
@@ -270,9 +321,18 @@ class DB:
         c.execute('''
             update threads
             set title = ?, text = ?, modify_time = ?
-            where thread_id = ? and author_id = ?
+            where thread_id = ? and (
+              (author_id = ? and (select 1 from users where user_id = ? and banned_until < ?))
+              -- 1 = moderator, 2 = admin
+              or (select 1 from users where user_id = ? and (role = 1 or role = 2))
+            )
             ''',
-            (title, text, time, thread_id, user_id)
+            (
+                title, text, time,
+                thread_id,
+                user_id, user_id, time,
+                user_id,
+            )
         )
         if c.rowcount > 0:
             db.commit()
@@ -285,16 +345,51 @@ class DB:
         c.execute('''
             update comments
             set text = ?, modify_time = ?
-            where comment_id = ? and author_id = ?
+            where comment_id = ? and (
+              (author_id = ? and (select 1 from users where user_id = ? and banned_until < ?))
+              -- 1 = moderator, 2 = admin
+              or (select 1 from users where user_id = ? and (role = 1 or role = 2))
+            )
             ''',
-            (text, time, comment_id, user_id)
+            (
+                text, time,
+                comment_id,
+                user_id, user_id, time,
+                user_id,
+            )
         )
         if c.rowcount > 0:
             db.commit()
             return True
         return False
 
+    def register_user(self, username, password, time):
+        '''
+        Add a user if registrations are enabled.
+        '''
+        try:
+            db = self._db()
+            c = db.cursor()
+            c.execute('''
+                insert into users(name, password, join_time)
+                select lower(?), ?, ?
+                from config
+                where registration_enabled = 1
+                ''',
+                (username, password, time)
+            )
+            if c.rowcount > 0:
+                db.commit()
+                return True
+            return False
+        except sqlite3.IntegrityError:
+            # User already exists, probably
+            return False
+
     def add_user(self, username, password, time):
+        '''
+        Add a user without checking if registrations are enabled.
+        '''
         try:
             db = self._db()
             c = db.cursor()
@@ -312,5 +407,81 @@ class DB:
             # User already exists, probably
             return False
 
+    def get_users(self):
+        return self._db().execute('''
+            select user_id, name, join_time, role, banned_until
+            from users
+            ''',
+        )
+
+    def set_forum_name(self, forum_id, name):
+        return self.change_one('''
+            update forums
+            set name = ?
+            where forum_id = ?
+            ''',
+            (name, forum_id)
+        )
+
+    def set_forum_description(self, forum_id, description):
+        return self.change_one('''
+            update forums
+            set description = ?
+            where forum_id = ?
+            ''',
+            (description, forum_id)
+        )
+
+    def add_forum(self, name, description):
+        db = self._db()
+        db.execute('''
+            insert into forums(name, description)
+            values (?, ?)
+            ''',
+            (name, description)
+        )
+        db.commit()
+
+    def set_config(self, server_name, server_description, registration_enabled):
+        return self.change_one('''
+            update config
+            set name = ?, description = ?, registration_enabled = ?
+            ''',
+            (server_name, server_description, registration_enabled)
+        )
+
+    def set_config_secrets(self, secret_key, captcha_key):
+        return self.change_one('''
+            update config
+            set secret_key = ?, captcha_key = ?
+            ''',
+            (secret_key, captcha_key)
+        )
+
+    def set_user_ban(self, user_id, until):
+        return self.change_one('''
+            update users
+            set banned_until = ?
+            where user_id = ?
+            ''',
+            (until, user_id)
+        )
+
+    def change_one(self, query, values):
+        db = self._db()
+        c = db.cursor()
+        c.execute(query, values)
+        if c.rowcount > 0:
+            db.commit()
+            return True
+        return False
+
+    def query(self, q):
+        db = self._db()
+        c = db.cursor()
+        rows = c.execute(q)
+        db.commit()
+        return rows, c.rowcount
+
     def _db(self):
-        return sqlite3.connect(self.conn)
+        return sqlite3.connect(self.conn, timeout=5)

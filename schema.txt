@@ -1,11 +1,20 @@
+create table config (
+	version                text     not null,
+	name                   text     not null,
+	description            text     not null,
+	secret_key             text     not null,
+	captcha_key            text     not null,
+	registration_enabled   boolean  not null
+);
+
 create table users (
 	user_id    integer       unique  not null  primary key  autoincrement,
 	name       varchar(32)   unique  not null,
 	password   varchar(128)  not null,
-	email      varchar(254),
 	about      text          not null  default '',
 	join_time  integer       not null,
-	role       integer       not null  default 0
+	role       integer       not null  default 0,
+	banned_until integer     not null  default 0
 );
 
 create table threads (
@@ -34,10 +43,9 @@ create table comments (
 );
 
 create table forums (
-	forum_id            integer       unique  not null  primary key  autoincrement,
+	forum_id            integer      unique  not null  primary key  autoincrement,
 	name                varchar(64)  not null,
-	description         text,
-	allowed_roles_mask  integer      not null
+	description         text         not null  default ''
 );
 
 -- Both of these speed up searches significantly if there are many threads or comments.

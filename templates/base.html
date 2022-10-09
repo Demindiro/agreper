@@ -9,21 +9,30 @@
 	<nav>
 		<a class=logo href="{{ url_for('index') }}">A</a>
 		<div style="margin:auto"></div>
-		{% if 'user_id' in session %}
-		<a href="{{ url_for('user_edit') }}">User panel</a>
-		<span>|</span>
+		{%- if user is not none -%}
+		<a href="{{ url_for('user_edit') }}">
+		{{- user.name }}
+		{%- if user.is_banned() %} (banned for {{ format_until(user.banned_until) }}){% endif -%}
+		</a>
+		<span> | </span>
+		{%- if user.is_admin() -%}
+		<a href="{{ url_for('admin') }}">Admin panel</a>
+		<span> | </span>
+		{%- endif -%}
 		<a href="{{ url_for('logout') }}">Logout</a>
-		{% else %}
+		{%- else -%}
+		{%- if config.registration_enabled -%}
 		<a href="{{ url_for('register') }}">Register</a>
-		<span>|</span>
+		<span> | </span>
+		{%- endif -%}
 		<a href="{{ url_for('login') }}">Login</a>
-		{% endif %}
+		{%- endif -%}
 	</nav>
 	<main>
 		<h1>{{ title }}</h1>
-		{% for category, msg in get_flashed_messages(True) %}
+		{%- for category, msg in get_flashed_messages(True) -%}
 		<p class="flash {{ category }}">{{ msg }}</p>
-		{% endfor %}
-		{% block content %}{% endblock %}
+		{%- endfor -%}
+		{%- block content %}{% endblock -%}
 	</main>
 </body>

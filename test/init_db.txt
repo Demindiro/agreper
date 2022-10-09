@@ -1,26 +1,25 @@
-insert into users (name, password, email, join_time) values (
+insert into users (name, password, join_time) values (
 	"foo",
 	-- supasecret
 	"$argon2id$v=19$m=65536,t=3,p=4$qBWCEAKgdA4BYOy915qzlg$KhGy3UF0QMlplt2eB7r7QNL2kDcggXUimRWUrWql8sI",
-	"foo@bar.baz",
-	0
-);
-insert into users (name, password, email, join_time) values (
-	"bar",
-	-- abraca
-	"$argon2id$v=19$m=65536,t=3,p=4$klJKCUFoDaF07j3nPCeEUA$lCphd5n1YIs8MaVop2vGNirwknkh91qJIZHMuBOlgWA",
-	"bar@foo.baz",
 	0
 );
 insert into users (name, password, join_time) values (
+	"bar",
+	-- abraca
+	"$argon2id$v=19$m=65536,t=3,p=4$klJKCUFoDaF07j3nPCeEUA$lCphd5n1YIs8MaVop2vGNirwknkh91qJIZHMuBOlgWA",
+	0
+);
+insert into users (name, password, join_time, role) values (
 	"bazzers",
 	-- e
 	"$argon2id$v=19$m=65536,t=3,p=4$9v5fS2ktxTinNEbIGUOoFQ$LMdEuAuuTCJ7utOE88+nXn7o6R/DEKY8ZA6wV+YkVGQ",
-	0
+	0,
+	2
 );
 
-insert into forums (name, description, allowed_roles_mask)
-	values ("Earth", "The totality of all space and time; all that is, has been, and will be.", 1);
+insert into forums (name, description)
+	values ("Earth", "The totality of all space and time; all that is, has been, and will be.");
 
 insert into threads (author_id, forum_id, create_time, modify_time, update_time, title, text)
 	values (1, 1, 0, 0, 0, "Hello, world!",

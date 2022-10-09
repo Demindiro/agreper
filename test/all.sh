@@ -15,7 +15,7 @@ db=$tmp/forum.db
 . $base/../venv/bin/activate
 
 # initialize db
-$SQLITE $db < $base/../schema.txt
+$base/../init_sqlite.sh $db
 $SQLITE $db < $base/init_db.txt
 cd $base/..
 

@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 
 {%- block content %}
+{%- if config.registration_enabled -%}
 <form method="post" class=login>
 <table>
 <tr><td>Username</td><td><input type="text" name="username" minlength=3></td></tr>
@@ -10,4 +11,7 @@
 <input name="answer" value="{{ answer }}" hidden>
 <input type="submit" value="Register">
 </form>
-{% endblock %}
+{%- else -%}
+<p>Registrations are disabled.</p>
+{%- endif %}
+{%- endblock %}
