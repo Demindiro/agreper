@@ -1,4 +1,4 @@
-VERSION = 'agrepy-v0.1'
+VERSION = 'agreper-v0.1'
 
 from flask import Flask, render_template, session, request, redirect, url_for, flash, g
 from db.sqlite import DB

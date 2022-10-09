@@ -19,8 +19,8 @@ $SQLITE $1 -init schema.txt "insert into config (
 	registration_enabled
 )
 values (
-	'agrepy-v0.1',
-	'Agrepy',
+	'agreper-v0.1',
+	'Agreper',
 	'',
 	'$(head -c 30 /dev/urandom | base64)',
 	'$(head -c 30 /dev/urandom | base64)',
