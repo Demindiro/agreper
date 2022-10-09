@@ -44,10 +44,13 @@ values (
 	'$(head -c 30 /dev/urandom | base64)',
 	'$(head -c 30 /dev/urandom | base64)',
 	0
-);
-
-insert into users (name, password, role, join_time)
-values (lower('$username'), '$password', 2, $time);
-"
+)"
+if [ "$2" != --no-admin ]
+then
+	$SQLITE "$1" "
+		insert into users (name, password, role, join_time)
+		values (lower('$username'), '$password', 2, $time)
+	"
+fi
 
 echo "Database '$1' created" >&2
