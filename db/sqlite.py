@@ -35,15 +35,18 @@ class DB:
             (forum_id,)
         ).fetchone()
 
-    def get_threads(self, forum_id):
+    def get_threads(self, forum_id, offset, limit):
         return self._db().execute('''
             select t.thread_id, title, t.create_time, t.update_time, t.author_id, name, count(c.thread_id)
             from threads t, users
             left join comments c on t.thread_id = c.thread_id
             where forum_id = ? and user_id = t.author_id
             group by t.thread_id
+            order by t.update_time desc
+            limit ?
+            offset ?
             ''',
-            (forum_id,)
+            (forum_id, limit, offset)
         )
 
     def get_thread(self, thread):

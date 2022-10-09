@@ -1,4 +1,6 @@
 VERSION = 'agreper-v0.1'
+# TODO put in config table
+THREADS_PER_PAGE = 50
 
 from flask import Flask, render_template, session, request, redirect, url_for, flash, g
 from db.sqlite import DB
@@ -39,7 +41,13 @@ def index():
 @app.route('/forum/<int:forum_id>/')
 def forum(forum_id):
     title, description = db.get_forum(forum_id)
-    threads = db.get_threads(forum_id)
+    offset = int(request.args.get('p', 0))
+    threads = [*db.get_threads(forum_id, offset, THREADS_PER_PAGE + 1)]
+    if len(threads) == THREADS_PER_PAGE + 1:
+        threads.pop()
+        next_page = offset + THREADS_PER_PAGE
+    else:
+        next_page = None
     return render_template(
         'forum.html',
         title = title,
@@ -48,6 +56,8 @@ def forum(forum_id):
         forum_id = forum_id,
         description = description,
         threads = threads,
+        next_page = next_page,
+        prev_page = max(offset - THREADS_PER_PAGE, 0) if offset > 0 else None,
     )
 
 @app.route('/thread/<int:thread_id>/')
