@@ -7,7 +7,15 @@
 <tr><td>Username</td><td>{{ user.name }}</td></tr>
 <tr><td>ID</td><td>{{ user.id }}</td></tr>
 <tr><td>About</td><td><textarea name="about">{{ about }}</textarea></td></tr>
-</form>
 </table>
 <input type="submit" value="Update">
+</form>
+<br>
+<form method="post" action=edit/password/>
+<table>
+<tr><td>Old password</td><td><input type=password name=old></td></tr>
+<tr><td>New password</td><td><input type=password name=new></td></tr>
+</table>
+<input type="submit" value="Set password">
+</form>
 {% endblock %}

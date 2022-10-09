@@ -134,6 +134,26 @@ def user_edit():
         about = about
     )
 
+@app.route('/user/edit/password/', methods = ['POST'])
+def user_edit_password():
+    user_id = session.get('user_id')
+    if user_id is None:
+        return redirect(url_for('login'))
+
+    new = request.form['new']
+    if len(new) < 8:
+        flash('New password must be at least 8 characters long', 'error')
+    else:
+        hash, = db.get_user_password_by_id(user_id)
+        if verify_password(request.form['old'], hash):
+            if db.set_user_password(user_id, hash_password(new)):
+                flash('Updated password', 'success')
+            else:
+                flash('Failed to update password', 'error')
+        else:
+            flash('Old password does not match', 'error')
+    return redirect(url_for('user_edit'))
+
 @app.route('/user/<int:user_id>/')
 def user_info(user_id):
     name, about = db.get_user_public_info(user_id)

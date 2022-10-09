@@ -135,6 +135,24 @@ class DB:
             (username,)
         ).fetchone()
 
+    def get_user_password_by_id(self, user_id):
+        return self._db().execute('''
+            select password
+            from users
+            where user_id = ?
+            ''',
+            (user_id,)
+        ).fetchone()
+
+    def set_user_password(self, user_id, password):
+        return self.change_one('''
+            update users
+            set password = ?
+            where user_id = ?
+            ''',
+            (password, user_id)
+        )
+
     def get_user_public_info(self, user_id):
         return self._db().execute('''
             select name, about
