@@ -8,7 +8,7 @@ Agreper is a forum board with a focus on being easy to set up and manage.
 
 ### Linux
 
-First clone or [download the latest release](todo).
+First clone or [download the latest release](https://github.com/Demindiro/agreper/archive/refs/tags/v0.1.tar.gz).
 
 Then setup with:
 
