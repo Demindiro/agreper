@@ -491,6 +491,16 @@ def admin_unban_user(user_id):
         flash(str(e), 'error')
     return redirect(url_for('admin'))
 
+@app.route('/admin/restart/', methods = ['POST'])
+def admin_restart():
+    chk, user = _admin_check()
+    if not chk:
+        return user
+
+    restart()
+    return redirect(url_for('admin'))
+
+
 def _admin_check():
     user = get_user()
     if user is None:
