@@ -350,10 +350,10 @@ def edit_comment(comment_id):
 @app.route('/register/', methods = ['GET', 'POST'])
 def register():
     if request.method == 'POST':
-        username, password = request.form['username'], request.form['password']
+        username, passwd = request.form['username'], request.form['password']
         if len(username) < 3:
             flash('Username must be at least 3 characters long', 'error')
-        elif len(password) < 8:
+        elif len(passwd) < 8:
             flash('Password must be at least 8 characters long', 'error')
         elif not captcha.verify(
             config.captcha_key,
@@ -361,7 +361,7 @@ def register():
             request.form['answer'],
         ):
             flash('CAPTCHA answer is incorrect', 'error')
-        elif not db.register_user(username, password.hash(password), time.time_ns()):
+        elif not db.register_user(username, password.hash(passwd), time.time_ns()):
             flash('Failed to create account (username may already be taken)', 'error')
         else:
             flash('Account has been created. You can login now.', 'success')
@@ -519,10 +519,10 @@ def admin_unban_user(user_id):
 @app.route('/admin/user/new/', methods = ['POST'])
 def admin_new_user():
     try:
-        name, password = request.form['name'], request.form['password']
-        if name == '' or password == '':
+        name, passwd = request.form['name'], request.form['password']
+        if name == '' or passwd == '':
             flash('Name and password may not be empty')
-        elif db.add_user(name, password.hash(password), time.time_ns()):
+        elif db.add_user(name, password.hash(passwd), time.time_ns()):
             flash('Added user', 'success')
         else:
             flash('Failed to add user', 'error')
