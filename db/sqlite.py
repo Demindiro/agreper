@@ -466,6 +466,15 @@ class DB:
             (until, user_id)
         )
 
+    def set_user_role(self, user_id, role):
+        return self.change_one('''
+            update users
+            set role = ?
+            where user_id = ?
+            ''',
+            (role, user_id)
+        )
+
     def change_one(self, query, values):
         db = self._db()
         c = db.cursor()

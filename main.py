@@ -530,6 +530,19 @@ def admin_new_user():
         flash(str(e), 'error')
     return redirect(url_for('admin'))
 
+@app.route('/admin/user/<int:user_id>/edit/role/', methods = ['POST'])
+def admin_set_role(user_id):
+    try:
+        role = request.form['role']
+        if role not in ('0', '1', '2'):
+            flash(f'Invalid role type ({role})', 'error')
+        else:
+            db.set_user_role(user_id, role)
+            flash('Set user role', 'success')
+    except Exception as e:
+        flash(str(e), 'error')
+    return redirect(url_for('admin'))
+
 @app.route('/admin/restart/', methods = ['POST'])
 def admin_restart():
     chk, user = _admin_check()
