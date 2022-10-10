@@ -539,6 +539,14 @@ def admin_restart():
     restart()
     return redirect(url_for('admin'))
 
+# TODO can probably be a static-esque page, maybe?
+@app.route('/help/')
+def help():
+    return render_template(
+        'help.html',
+        title = 'Help',
+        user = get_user(),
+    )
 
 def _admin_check():
     user = get_user()

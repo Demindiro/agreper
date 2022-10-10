@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Formatting</h2>
+<ul>
+<li>
+Prepend two spaces to format code, e.g.
+<div>{{ minimd('  This is code\n  More code') | safe }}</div>
+</li>
+<li>
+Lists, starting with '- ' or '0.', '1.' ... automatically have linebreaks added.
+e.g.
+<div>{{ minimd('- Item A\n- Item B') | safe }}</div>
+Note that there must be a single space between '-' and the rest of the line.
+</li>
+<li>
+Words starting with 'http://' or 'https://' are automatically turned into links.
+</li>
+</ul>
+{% endblock %}
