@@ -158,7 +158,7 @@ class DB:
 
     def get_user_public_info(self, user_id):
         return self._db().execute('''
-            select name, about
+            select name, about, banned_until
             from users
             where user_id = ?
             ''',
