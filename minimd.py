@@ -49,7 +49,7 @@ def html(text):
     if in_code:
         html.append('</pre>')
     html.append('</p>')
-    return ''.join(html)
+    return '\n'.join(html)
 
 
 if __name__ == '__main__':
