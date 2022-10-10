@@ -691,4 +691,4 @@ def trim_text(s):
     '''
     Because browsers LOVE \\r, trailing whitespace etc.
     '''
-    return s.strip().replace('\r', '')
+    return s.replace('\r', '')
