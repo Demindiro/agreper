@@ -532,6 +532,10 @@ def admin_unban_user(user_id):
 
 @app.route('/admin/user/new/', methods = ['POST'])
 def admin_new_user():
+    chk, user = _admin_check()
+    if not chk:
+        return user
+
     try:
         name, passwd = request.form['name'], request.form['password']
         if name == '' or passwd == '':
@@ -546,6 +550,10 @@ def admin_new_user():
 
 @app.route('/admin/user/<int:user_id>/edit/role/', methods = ['POST'])
 def admin_set_role(user_id):
+    chk, user = _admin_check()
+    if not chk:
+        return user
+
     try:
         role = request.form['role']
         if role not in ('0', '1', '2'):
