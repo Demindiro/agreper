@@ -508,7 +508,7 @@ def admin_unban_user(user_id):
         return user
 
     try:
-        if db.set_user_ban(user_id, None):
+        if db.set_user_ban(user_id, 0):
             flash('Unbanned user', 'success')
         else:
             flash('Failed to unban user', 'error')
