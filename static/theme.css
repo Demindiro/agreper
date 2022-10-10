@@ -35,6 +35,11 @@ a {
 	text-decoration: none;
 }
 
+p {
+	margin-top: 0.7em;
+	margin-bottom: 0.7em;
+}
+
 table {
 	border-collapse: collapse;
 	width: 100%;
@@ -80,6 +85,8 @@ table.form > * > tr > td, th {
 
 .comment {
 	margin-left: 20px;
+	margin-top: 15px;
+	margin-bottom: 15px;
 	padding-left: 10px;
 	border-left: 1px dotted;
 }
@@ -102,4 +109,22 @@ table.form > * > tr > td, th {
 
 .login input[type=text], .login input[type=password] {
 	width: 90%;
+}
+
+/* Abuse checkboxes to collapse comments */
+.collapse {
+	appearance: none;
+}
+.collapse:checked + * {
+	display: none
+}
+.collapse:after {
+	content: '[-]';
+}
+.collapse:checked:after {
+	content: '[+]';
+}
+
+.small {
+	font-size: 85%;
 }

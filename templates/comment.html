@@ -3,42 +3,44 @@
 {%- endmacro -%}
 
 {%- macro comment_author(comment, thread_id, can_delete) -%}
-<p><sub>
-	{{- author(comment.author_id, comment.author, comment.create_time, comment.modify_time) }} |
-	{# Suffixing a # prevents unnecessary reloads #}
-	<a href="{{ url_for('thread', thread_id = thread_id) }}#"> thread</a>
-	{%- if comment.parent_id is not none -%}
-	<a href="{{ url_for('comment', comment_id = comment.parent_id) }}#"> parent</a>
-	{%- endif -%}
-	{%- if user is not none and (comment.author_id == user.id or user.is_moderator()) and not user.is_banned() -%}
-	<a href="{{ url_for('edit_comment', comment_id = comment.id) }}"> edit</a>
-	{%- if can_delete -%}
-	<a href="{{ url_for('confirm_delete_comment', comment_id = comment.id) }}"> delete</a>
-	{%- endif -%}
-	{%- endif -%}
-</sub></p>
+<span class=small>
+{{- author(comment.author_id, comment.author, comment.create_time, comment.modify_time) }} |
+{# Suffixing a # prevents unnecessary reloads #}
+<a href="{{ url_for('thread', thread_id = thread_id) }}#"> thread</a>
+{%- if comment.parent_id is not none -%}
+<a href="{{ url_for('comment', comment_id = comment.parent_id) }}#"> parent</a>
+{%- endif -%}
+{%- if user is not none and (comment.author_id == user.id or user.is_moderator()) and not user.is_banned() -%}
+<a href="{{ url_for('edit_comment', comment_id = comment.id) }}"> edit</a>
+{%- if can_delete -%}
+<a href="{{ url_for('confirm_delete_comment', comment_id = comment.id) }}"> delete</a>
+{%- endif -%}
+{%- endif -%}
+</span>
 {%- endmacro -%}
 
 {%- macro thread_author(author_id, name, ctime, mtime) -%}
-<p><sub>
-	{{- author(author_id, name, ctime, mtime) -}}
-	{%- if user is not none and (author_id == user.id or user.is_moderator()) and not user.is_banned() -%}
-	<a href="{{ url_for('edit_thread', thread_id = thread_id) }}"> edit</a>
-	<a href="{{ url_for('confirm_delete_thread', thread_id = thread_id) }}"> delete</a>
-	{%- endif -%}
-</sub></p>
+<span class=small>
+{{- author(author_id, name, ctime, mtime) -}}
+{%- if user is not none and (author_id == user.id or user.is_moderator()) and not user.is_banned() -%}
+<a href="{{ url_for('edit_thread', thread_id = thread_id) }}"> edit</a>
+<a href="{{ url_for('confirm_delete_thread', thread_id = thread_id) }}"> delete</a>
+{%- endif -%}
+</span>
 {%- endmacro -%}
 
 {%- macro render_comment_pre(comment, thread_id, can_delete) -%}
 <div class=comment>
-	{{- comment_author(comment, thread_id, can_delete) -}}
-	<p>{{- minimd(comment.text) | safe -}}</p>
+{{- comment_author(comment, thread_id, can_delete) -}}
+<input type=checkbox class="collapse small">
+<div>{{- minimd(comment.text) | safe -}}
 {%- endmacro -%}
 
 {%- macro render_comment_post(comment, thread_id) -%}
 	{%- for c in comment.children -%}
 	{{- render_comment(c, thread_id) -}}
 	{%- endfor -%}
+</div>
 </div>
 {%- endmacro -%}
 
