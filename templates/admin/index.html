@@ -100,7 +100,7 @@
 </td>
 <td>
 {%- if banned_until > 0 -%}
-<form method=post action="{{ url_for('admin_ban_user', user_id = id) }}">
+<form method=post action="{{ url_for('admin_unban_user', user_id = id) }}">
 {{- format_time(banned_until) }}
 <input type=submit value=Unban>
 </form>
