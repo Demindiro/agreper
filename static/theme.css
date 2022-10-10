@@ -114,6 +114,7 @@ table.form > * > tr > td, th {
 /* Abuse checkboxes to collapse comments */
 .collapse {
 	appearance: none;
+	cursor: pointer;
 }
 .collapse:checked + * {
 	display: none
