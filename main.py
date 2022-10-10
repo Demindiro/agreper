@@ -582,8 +582,6 @@ def create_comment_tree(comments):
         for c in l:
             sort_time(c.children)
     sort_time(root)
-    if __debug__:
-        print('building tree with', len(comment_map), 'comments took', time.time() - start, 'seconds')
     return root
 
 

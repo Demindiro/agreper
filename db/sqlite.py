@@ -276,7 +276,6 @@ class DB:
             (thread_id, author_id, text, time, time, thread_id, author_id, time)
         )
         if c.rowcount > 0:
-            print('SHIT')
             c.execute('''
                 update threads
                 set update_time = ?
