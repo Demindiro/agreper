@@ -1,5 +1,7 @@
 # Agreper - minimal, no-JS forum software
 
+**For security issues, please send a mail to argeper+security@demindiro.com**
+
 ![Hello world!](https://static.agreper.com/hello_world.png)
 
 Agreper is a forum board with a focus on being easy to set up and manage.
