@@ -158,7 +158,7 @@ class DB:
 
     def get_user_public_info(self, user_id):
         return self._db().execute('''
-            select name, about
+            select name, about, banned_until
             from users
             where user_id = ?
             ''',
@@ -464,6 +464,15 @@ class DB:
             where user_id = ?
             ''',
             (until, user_id)
+        )
+
+    def set_user_role(self, user_id, role):
+        return self.change_one('''
+            update users
+            set role = ?
+            where user_id = ?
+            ''',
+            (role, user_id)
         )
 
     def change_one(self, query, values):

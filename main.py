@@ -166,13 +166,15 @@ def user_edit_password():
 
 @app.route('/user/<int:user_id>/')
 def user_info(user_id):
-    name, about = db.get_user_public_info(user_id)
+    name, about, banned_until = db.get_user_public_info(user_id)
     return render_template(
         'user_info.html',
         title = 'Profile',
         config = config,
         user = get_user(),
         name = name,
+        id = user_id,
+        banned_until = banned_until,
         about = about
     )
 
@@ -480,9 +482,8 @@ def admin_new_secrets():
         flash(str(e), 'error')
     return redirect(url_for('admin'))
 
-@app.route('/admin/user/<int:user_id>/ban/', methods = ['POST'])
-def admin_ban_user(user_id):
-    chk, user = _admin_check()
+def ban_user(user_id):
+    chk, user = _moderator_check()
     if not chk:
         return user
 
@@ -490,7 +491,7 @@ def admin_ban_user(user_id):
     d = 0 if d == '' else int(d)
     h, m = (0, 0) if t == '' else map(int, t.split(':'))
     until = time.time_ns() + (d * 24 * 60 + h * 60 + m) * (60 * 10**9)
-    until = min(until, 0xffff_ffff_ffff_ffff)
+    until = min(until, 0x7fff_ffff_ffff_ffff)
 
     try:
         if db.set_user_ban(user_id, until):
@@ -499,22 +500,35 @@ def admin_ban_user(user_id):
             flash('Failed to ban user', 'error')
     except Exception as e:
         flash(str(e), 'error')
-    return redirect(url_for('admin'))
 
-@app.route('/admin/user/<int:user_id>/unban/', methods = ['POST'])
-def admin_unban_user(user_id):
-    chk, user = _admin_check()
+@app.route('/user/<int:user_id>/ban/', methods = ['POST'])
+def moderator_ban_user(user_id):
+    return ban_user(user_id) or redirect(url_for('user_info', user_id = user_id))
+
+@app.route('/admin/user/<int:user_id>/ban/', methods = ['POST'])
+def admin_ban_user(user_id):
+    return ban_user(user_id) or redirect(url_for('admin'))
+
+def unban_user(user_id):
+    chk, user = _moderator_check()
     if not chk:
         return user
 
     try:
-        if db.set_user_ban(user_id, None):
+        if db.set_user_ban(user_id, 0):
             flash('Unbanned user', 'success')
         else:
             flash('Failed to unban user', 'error')
     except Exception as e:
         flash(str(e), 'error')
-    return redirect(url_for('admin'))
+
+@app.route('/user/<int:user_id>/unban/', methods = ['POST'])
+def moderator_unban_user(user_id):
+    return unban_user(user_id) or redirect(url_for('user_info', user_id = user_id))
+
+@app.route('/admin/user/<int:user_id>/unban/', methods = ['POST'])
+def admin_unban_user(user_id):
+    return unban_user(user_id) or redirect(url_for('admin'))
 
 @app.route('/admin/user/new/', methods = ['POST'])
 def admin_new_user():
@@ -526,6 +540,19 @@ def admin_new_user():
             flash('Added user', 'success')
         else:
             flash('Failed to add user', 'error')
+    except Exception as e:
+        flash(str(e), 'error')
+    return redirect(url_for('admin'))
+
+@app.route('/admin/user/<int:user_id>/edit/role/', methods = ['POST'])
+def admin_set_role(user_id):
+    try:
+        role = request.form['role']
+        if role not in ('0', '1', '2'):
+            flash(f'Invalid role type ({role})', 'error')
+        else:
+            db.set_user_role(user_id, role)
+            flash('Set user role', 'success')
     except Exception as e:
         flash(str(e), 'error')
     return redirect(url_for('admin'))
@@ -547,6 +574,14 @@ def help():
         title = 'Help',
         user = get_user(),
     )
+
+def _moderator_check():
+    user = get_user()
+    if user is None:
+        return False, redirect(url_for('login'))
+    if not user.is_moderator():
+        return False, ('<h1>Forbidden</h1>', 403)
+    return True, user
 
 def _admin_check():
     user = get_user()

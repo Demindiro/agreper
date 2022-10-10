@@ -1,6 +1,21 @@
 {% extends 'base.html' %}
 
-{% block content %}
+{%- block content %}
+{%- if user is not none and user.is_moderator -%}
+<p>
+<form method=post action="{{ url_for('moderator_ban_user', user_id = id) }}">
+<input type=number name=days placeholder=days>
+<input type=time name=time>
+<input type=submit value=Ban>
+</form>
+{%- if banned_until > 0 -%}
+<form method=post action="{{ url_for('moderator_unban_user', user_id = id) }}">
+{{- format_time(banned_until) -}}
+<input type=submit value=Unban>
+</form>
+{%- endif -%}
+</p>
+{%- endif -%}
 <p><sup><i>{{ name }}</i></sup></p>
 <p>{{ minimd(about) | safe }}<p>
-{% endblock %}
+{%- endblock %}
