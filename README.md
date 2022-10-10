@@ -1,6 +1,6 @@
 # Agreper - minimal, no-JS forum software
 
-**For security issues, please send a mail to argeper+security@demindiro.com**
+**For security issues, please send a mail to agreper+security@demindiro.com**
 
 ![Hello world!](https://static.agreper.com/hello_world.png)
 
