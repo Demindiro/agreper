@@ -1,4 +1,4 @@
-VERSION = 'agreper-v0.1'
+VERSION = 'agreper-v0.1.1'
 # TODO put in config table
 THREADS_PER_PAGE = 50
 
@@ -42,7 +42,8 @@ def index():
 def forum(forum_id):
     title, description = db.get_forum(forum_id)
     offset = int(request.args.get('p', 0))
-    threads = [*db.get_threads(forum_id, offset, THREADS_PER_PAGE + 1)]
+    user_id = session.get('user_id', -1)
+    threads = [*db.get_threads(forum_id, offset, THREADS_PER_PAGE + 1, user_id)]
     if len(threads) == THREADS_PER_PAGE + 1:
         threads.pop()
         next_page = offset + THREADS_PER_PAGE
@@ -63,7 +64,7 @@ def forum(forum_id):
 @app.route('/thread/<int:thread_id>/')
 def thread(thread_id):
     user_id = session.get('user_id')
-    title, text, author, author_id, create_time, modify_time, comments = db.get_thread(thread_id)
+    title, text, author, author_id, create_time, modify_time, comments, hidden = db.get_thread(thread_id)
     comments = create_comment_tree(comments)
     return render_template(
         'thread.html',
@@ -74,6 +75,7 @@ def thread(thread_id):
         author = author,
         author_id = author_id,
         thread_id = thread_id,
+        hidden = hidden,
         create_time = create_time,
         modify_time = modify_time,
         comments = comments,
@@ -573,6 +575,25 @@ def admin_restart():
 
     restart()
     return redirect(url_for('admin'))
+
+@app.route('/thread/<int:thread_id>/hide/', methods = ['POST'])
+def set_hide_thread(thread_id):
+    chk, user = _moderator_check()
+    if not chk:
+        return user
+
+    try:
+        print(request.form['hide'])
+        hide = request.form['hide'] != '0'
+        hide_str = 'Hidden' if hide else 'Unhidden'
+        if db.set_thread_hidden(thread_id, hide):
+            flash(f'{hide_str} thread', 'success')
+        else:
+            flash(f'Failed to {hide_str.lower()} thread', 'error')
+    except Exception as e:
+        flash(str(e), 'error')
+
+    return redirect(request.form['redirect'])
 
 # TODO can probably be a static-esque page, maybe?
 @app.route('/help/')

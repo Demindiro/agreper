@@ -35,24 +35,49 @@ class DB:
             (forum_id,)
         ).fetchone()
 
-    def get_threads(self, forum_id, offset, limit):
+    def get_threads(self, forum_id, offset, limit, user_id):
         return self._db().execute('''
-            select t.thread_id, title, t.create_time, t.update_time, t.author_id, name, count(c.thread_id)
-            from threads t, users
-            left join comments c on t.thread_id = c.thread_id
-            where forum_id = ? and user_id = t.author_id
+            select
+              t.thread_id,
+              title,
+              t.create_time,
+              t.update_time,
+              t.author_id,
+              name,
+              count(c.thread_id),
+              t.hidden
+            from
+              threads t,
+              users
+            left join
+              comments c
+            on
+              t.thread_id = c.thread_id
+            where forum_id = ?
+              and user_id = t.author_id
+              and (
+                t.hidden = 0 or (
+                  select 1 from users
+                  where user_id = ?
+                    and (
+                      user_id = t.author_id
+                      -- 1 = moderator, 2 = admin
+                      or role in (1, 2)
+                    )
+                )
+              )
             group by t.thread_id
             order by t.update_time desc
             limit ?
             offset ?
             ''',
-            (forum_id, limit, offset)
+            (forum_id, user_id, limit, offset)
         )
 
     def get_thread(self, thread):
         db = self._db()
-        title, text, author, author_id, create_time, modify_time = db.execute('''
-            select title, text, name, author_id, create_time, modify_time
+        title, text, author, author_id, create_time, modify_time, hidden = db.execute('''
+            select title, text, name, author_id, create_time, modify_time, hidden
             from threads, users
             where thread_id = ? and author_id = user_id
             ''',
@@ -67,7 +92,7 @@ class DB:
             ''',
             (thread,)
         )
-        return title, text, author, author_id, create_time, modify_time, comments
+        return title, text, author, author_id, create_time, modify_time, comments, hidden
 
     def get_thread_title(self, thread_id):
         return self._db().execute('''
@@ -473,6 +498,15 @@ class DB:
             where user_id = ?
             ''',
             (role, user_id)
+        )
+
+    def set_thread_hidden(self, thread_id, hide):
+        return self.change_one('''
+            update threads
+            set hidden = ?
+            where thread_id = ?
+            ''',
+            (hide, thread_id)
         )
 
     def change_one(self, query, values):
