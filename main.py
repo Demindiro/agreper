@@ -656,15 +656,28 @@ def create_comment_tree(comments, user):
     # Collect comments first, then build the tree in case we encounter a child before a parent
     comment_map = { v[0]: Comment(*v) for v in comments }
     root = []
+    # We should keep showing hidden comments if the user replied to them, directly or indirectly.
+    # To do that, keep track of user comments, then walk up the tree and insert hidden comments.
+    user_comments = []
     # Build tree
-    for comment in comment_map.values():
-        if comment.hidden and not user.is_moderator():
-            continue
+    def insert(comment):
         parent = comment_map.get(comment.parent_id)
         if parent is not None:
             parent.children.append(comment)
         else:
             root.append(comment)
+    for comment in comment_map.values():
+        if comment.hidden and (not user or not user.is_moderator()):
+            continue
+        insert(comment)
+        if user and (comment.author_id == user.id and not user.is_moderator()):
+            user_comments.append(comment)
+    # Insert replied-to hidden comments
+    for c in user_comments:
+        while c is not None:
+            if c.hidden:
+                insert(c)
+            c = comment_map.get(c.parent_id)
     # Sort each comment based on create time
     def sort_time(l):
         l.sort(key=lambda c: c.modify_time, reverse=True)
