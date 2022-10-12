@@ -19,7 +19,7 @@ class DB:
             on t.thread_id = (
               select tt.thread_id
               from threads tt
-              where f.forum_id = tt.forum_id
+              where f.forum_id = tt.forum_id and not tt.hidden
               order by update_time desc
               limit 1
             )
