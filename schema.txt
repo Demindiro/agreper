@@ -27,7 +27,7 @@ create table threads (
 	title        varchar(64)  not null,
 	text         text         not null,
 	score        integer      not null  default 0,
-	dead         boolean      not null  default false
+	hidden       boolean      not null  default false
 );
 
 create table comments (
@@ -39,7 +39,7 @@ create table comments (
 	modify_time  integer      not null,
 	text         text         not null,
 	score        integer      not null  default 0,
-	dead         boolean      not null  default false
+	hidden       boolean      not null  default false
 );
 
 create table forums (
