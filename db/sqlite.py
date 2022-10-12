@@ -84,7 +84,15 @@ class DB:
             (thread,)
         ).fetchone()
         comments = db.execute('''
-            select comment_id, parent_id, author_id, name, text, create_time, modify_time
+            select
+              comment_id,
+              parent_id,
+              author_id,
+              name,
+              text,
+              create_time,
+              modify_time,
+              hidden
             from comments
               left join users
               on author_id = user_id
@@ -148,8 +156,21 @@ class DB:
                 union
                 select comment_id from descendant_of, comments where id = parent_id
               )
-            select id, parent_id, author_id, name, text, create_time, modify_time from descendant_of, comments, users
-            where id = comment_id and user_id = author_id
+            select
+              id,
+              parent_id,
+              author_id,
+              name,
+              text,
+              create_time,
+              modify_time,
+              hidden
+            from
+              descendant_of,
+              comments,
+              users
+            where id = comment_id
+              and user_id = author_id
             ''',
             (comment_id,)
         )
@@ -507,6 +528,15 @@ class DB:
             where thread_id = ?
             ''',
             (hide, thread_id)
+        )
+
+    def set_comment_hidden(self, comment_id, hide):
+        return self.change_one('''
+            update comments
+            set hidden = ?
+            where comment_id = ?
+            ''',
+            (hide, comment_id)
         )
 
     def change_one(self, query, values):
