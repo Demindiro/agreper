@@ -1,0 +1,15 @@
+{% macro moderate_thread(id, hidden) %}
+<form method=post action="{{ url_for('set_hide_thread', thread_id = id) }}">
+<input name=redirect value="{{ request.full_path }}" hidden>
+<input name=hide value={{ 0 if hidden else 1 }} hidden>
+<input type=submit value="{{ 'Unhide' if hidden else 'Hide' }}">
+</form>
+{% endmacro %}
+
+{% macro moderate_comment(id, hidden) %}
+<form method=post action="{{ url_for('set_hide_comment', comment_id = id) }}" style=display:inline>
+<input name=redirect value="{{ request.full_path }}" hidden>
+<input name=hide value={{ 0 if hidden else 1 }} hidden>
+<input type=submit value="{{ 'Unhide' if hidden else 'Hide' }}">
+</form>
+{% endmacro %}

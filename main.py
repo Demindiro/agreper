@@ -1,4 +1,4 @@
-VERSION = 'agreper-v0.1'
+VERSION = 'agreper-v0.1.1'
 # TODO put in config table
 THREADS_PER_PAGE = 50
 
@@ -42,7 +42,8 @@ def index():
 def forum(forum_id):
     title, description = db.get_forum(forum_id)
     offset = int(request.args.get('p', 0))
-    threads = [*db.get_threads(forum_id, offset, THREADS_PER_PAGE + 1)]
+    user_id = session.get('user_id', -1)
+    threads = [*db.get_threads(forum_id, offset, THREADS_PER_PAGE + 1, user_id)]
     if len(threads) == THREADS_PER_PAGE + 1:
         threads.pop()
         next_page = offset + THREADS_PER_PAGE
@@ -62,18 +63,19 @@ def forum(forum_id):
 
 @app.route('/thread/<int:thread_id>/')
 def thread(thread_id):
-    user_id = session.get('user_id')
-    title, text, author, author_id, create_time, modify_time, comments = db.get_thread(thread_id)
-    comments = create_comment_tree(comments)
+    user = get_user()
+    title, text, author, author_id, create_time, modify_time, comments, hidden = db.get_thread(thread_id)
+    comments = create_comment_tree(comments, user)
     return render_template(
         'thread.html',
         title = title,
         config = config,
-        user = get_user(),
+        user = user,
         text = text,
         author = author,
         author_id = author_id,
         thread_id = thread_id,
+        hidden = hidden,
         create_time = create_time,
         modify_time = modify_time,
         comments = comments,
@@ -81,8 +83,9 @@ def thread(thread_id):
 
 @app.route('/comment/<int:comment_id>/')
 def comment(comment_id):
+    user = get_user()
     thread_id, parent_id, title, comments = db.get_subcomments(comment_id)
-    comments = create_comment_tree(comments)
+    comments = create_comment_tree(comments, user)
     reply_comment, = comments
     comments = reply_comment.children
     reply_comment.children = []
@@ -90,7 +93,7 @@ def comment(comment_id):
         'comments.html',
         title = title,
         config = config,
-        user = get_user(),
+        user = user,
         reply_comment = reply_comment,
         comments = comments,
         parent_id = parent_id,
@@ -574,6 +577,42 @@ def admin_restart():
     restart()
     return redirect(url_for('admin'))
 
+@app.route('/thread/<int:thread_id>/hide/', methods = ['POST'])
+def set_hide_thread(thread_id):
+    chk, user = _moderator_check()
+    if not chk:
+        return user
+
+    try:
+        hide = request.form['hide'] != '0'
+        hide_str = 'Hidden' if hide else 'Unhidden'
+        if db.set_thread_hidden(thread_id, hide):
+            flash(f'{hide_str} thread', 'success')
+        else:
+            flash(f'Failed to {hide_str.lower()} thread', 'error')
+    except Exception as e:
+        flash(str(e), 'error')
+
+    return redirect(request.form['redirect'])
+
+@app.route('/comment/<int:comment_id>/hide/', methods = ['POST'])
+def set_hide_comment(comment_id):
+    chk, user = _moderator_check()
+    if not chk:
+        return user
+
+    try:
+        hide = request.form['hide'] != '0'
+        hide_str = 'Hidden' if hide else 'Unhidden'
+        if db.set_comment_hidden(comment_id, hide):
+            flash(f'{hide_str} comment', 'success')
+        else:
+            flash(f'Failed to {hide_str.lower()} comment', 'error')
+    except Exception as e:
+        flash(str(e), 'error')
+
+    return redirect(request.form['redirect'])
+
 # TODO can probably be a static-esque page, maybe?
 @app.route('/help/')
 def help():
@@ -601,7 +640,7 @@ def _admin_check():
 
 
 class Comment:
-    def __init__(self, id, author_id, author, text, create_time, modify_time, parent_id):
+    def __init__(self, id, parent_id, author_id, author, text, create_time, modify_time, hidden):
         self.id = id
         self.author_id = author_id
         self.author = author
@@ -610,23 +649,35 @@ class Comment:
         self.create_time = create_time
         self.modify_time = modify_time
         self.parent_id = parent_id
+        self.hidden = hidden
 
-def create_comment_tree(comments):
+def create_comment_tree(comments, user):
     start = time.time();
     # Collect comments first, then build the tree in case we encounter a child before a parent
-    comment_map = {
-        comment_id: Comment(comment_id, author_id, author, text, create_time, modify_time, parent_id)
-        for comment_id, parent_id, author_id, author, text, create_time, modify_time
-        in comments
-    }
+    comment_map = { v[0]: Comment(*v) for v in comments }
     root = []
+    # We should keep showing hidden comments if the user replied to them, directly or indirectly.
+    # To do that, keep track of user comments, then walk up the tree and insert hidden comments.
+    user_comments = []
     # Build tree
-    for comment in comment_map.values():
+    def insert(comment):
         parent = comment_map.get(comment.parent_id)
         if parent is not None:
             parent.children.append(comment)
         else:
             root.append(comment)
+    for comment in comment_map.values():
+        if comment.hidden and (not user or not user.is_moderator()):
+            continue
+        insert(comment)
+        if user and (comment.author_id == user.id and not user.is_moderator()):
+            user_comments.append(comment)
+    # Insert replied-to hidden comments
+    for c in user_comments:
+        while c is not None:
+            if c.hidden:
+                insert(c)
+            c = comment_map.get(c.parent_id)
     # Sort each comment based on create time
     def sort_time(l):
         l.sort(key=lambda c: c.modify_time, reverse=True)

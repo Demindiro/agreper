@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{%- from 'moderator.html' import moderate_thread with context %}
 
 {%- macro nav() -%}
 <p style=text-align:center>
@@ -19,14 +20,22 @@
 		<th>Created</th>
 		<th>Updated</th>
 		<th>Comments</th>
+		{%- if user is not none and user.is_moderator() -%}
+		<th>Action</th>
+		{%- endif -%}
 	</tr>
-	{% for id, title, ctime, utime, author_id, author, comment_count in threads %}
+	{% for id, title, ctime, utime, author_id, author, comment_count, hidden in threads %}
 	<tr>
-		<th><a href="{{ url_for('thread', thread_id = id) }}">{{ title }}</a></th>
+		<th>{{ '[hidden] ' if hidden else '' }}<a href="{{ url_for('thread', thread_id = id) }}">{{ title }}</a></th>
 		<td><a href="{{ url_for('user_info', user_id = author_id) }}">{{ author }}</a></td>
 		<td>{{ format_since(ctime) }}</td>
 		<td>{{ format_since(utime) }}</td>
 		<td>{{ comment_count }}</td>
+		<td>
+		{%- if user is not none and user.is_moderator() %}
+		{{- moderate_thread(id, hidden) }}
+		{%- endif -%}
+		</td>
 	</tr>
 	{%- endfor -%}
 </table>

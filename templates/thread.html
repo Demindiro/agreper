@@ -1,8 +1,12 @@
 {%- extends 'base.html' %}
 {%- from 'comment.html' import render_comment, reply, thread_author with context %}
+{%- from 'moderator.html' import moderate_thread with context %}
 
 {%- block content %}
-{{ thread_author(author_id, author, create_time, modify_time) }}
+{%- if user is not none and user.is_moderator() -%}
+<p>{{ moderate_thread(thread_id, hidden) }}</p>
+{%- endif -%}
+{{- thread_author(author_id, author, create_time, modify_time) }}
 <p>{{ minimd(text) | safe }}</p>
 
 {{- reply() }}

@@ -32,6 +32,10 @@ Lastly, run with:
 
 You will need a proxy such as nginx to access the forum on the public internet.
 
+## Upgrading
+
+To upgrade from a previous version, run ``upgrade_sqlite.sh``
+
 ## Screenshots
 
 ![Index](https://static.agreper.com/index.png)
