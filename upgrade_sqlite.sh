@@ -2,6 +2,10 @@
 
 # Script to upgrade a database from one version to another by adding columns,
 # tables etc.
+# Upgrade scripts go into upgrade/sqlite/
+# If there are multiple changes after a revision but before a new one, suffix a
+# letter (e.g. `v0.1.1a`).
+# When a new revision is out, add a script that changes just the version.
 
 LAST_VERSION=agreper-v0.1.1
 
