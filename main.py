@@ -7,6 +7,7 @@ from db.sqlite import DB
 import os, sys, subprocess
 import passlib.hash, secrets
 import time
+import string
 from datetime import datetime
 import captcha, password, minimd
 
@@ -357,9 +358,9 @@ def edit_comment(comment_id):
 def register():
     if request.method == 'POST':
         username, passwd = request.form['username'], request.form['password']
-        if username != username.strip():
+        if any(c in username for c in string.whitespace):
             # This error is more ergonomic in case someone tries to play tricks again :)
-            flash('Username may not begin or end with whitespace', 'error')
+            flash('Username may not contain whitespace', 'error')
         elif len(username) < 3:
             flash('Username must be at least 3 characters long', 'error')
         elif len(passwd) < 8:
