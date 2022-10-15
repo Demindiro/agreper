@@ -129,3 +129,12 @@ table.form > * > tr > td, th {
 .small {
 	font-size: 85%;
 }
+
+.spoiler {
+	background-color: black;
+	color: black;
+}
+.spoiler:hover {
+	opacity: 1;
+	color: white;
+}

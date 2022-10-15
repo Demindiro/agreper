@@ -234,34 +234,39 @@ def delete_thread(thread_id):
         # TODO return 403, maybe?
     return redirect(url_for('index'))
 
+def _add_comment_check_user():
+    user_id = session.get('user_id')
+    if user_id is not None:
+        return user_id
+    if not config.registration_enabled:
+        flash('Registrations are not enabled. Please log in to comment', 'error')
+    if register_user(True):
+        return session['user_id']
+
 @app.route('/thread/<int:thread_id>/comment/', methods = ['POST'])
 def add_comment(thread_id):
-    user_id = session.get('user_id')
-    if user_id is None:
-        return redirect(url_for('login'))
-
-    text = trim_text(request.form['text'])
-    if text == '':
-        flash('Text may not be empty', 'error')
-    elif db.add_comment_to_thread(thread_id, user_id, text, time.time_ns()):
-        flash('Added comment', 'success')
-    else:
-        flash('Failed to add comment', 'error')
+    user_id = _add_comment_check_user()
+    if user_id is not None:
+        text = trim_text(request.form['text'])
+        if text == '':
+            flash('Text may not be empty', 'error')
+        elif db.add_comment_to_thread(thread_id, user_id, text, time.time_ns()):
+            flash('Added comment', 'success')
+        else:
+            flash('Failed to add comment', 'error')
     return redirect(url_for('thread', thread_id = thread_id))
 
 @app.route('/comment/<int:comment_id>/comment/', methods = ['POST'])
 def add_comment_parent(comment_id):
-    user_id = session.get('user_id')
-    if user_id is None:
-        return redirect(url_for('login'))
-
-    text = trim_text(request.form['text'])
-    if text == '':
-        flash('Text may not be empty', 'error')
-    elif db.add_comment_to_comment(comment_id, user_id, text, time.time_ns()):
-        flash('Added comment', 'success')
-    else:
-        flash('Failed to add comment', 'error')
+    user_id = _add_comment_check_user()
+    if user_id is not None:
+        text = trim_text(request.form['text'])
+        if text == '':
+            flash('Text may not be empty', 'error')
+        elif db.add_comment_to_comment(comment_id, user_id, text, time.time_ns()):
+            flash('Added comment', 'success')
+        else:
+            flash('Failed to add comment', 'error')
     return redirect(url_for('comment', comment_id = comment_id))
 
 @app.route('/comment/<int:comment_id>/confirm_delete/')
@@ -358,8 +363,7 @@ def edit_comment(comment_id):
 def register():
     if request.method == 'POST':
         username, passwd = request.form['username'], request.form['password']
-        if register_user():
-            flash('Account has been created', 'success')
+        if register_user(False):
             return redirect(url_for('index'))
 
     capt, answer = captcha.generate(config.captcha_key)
@@ -700,7 +704,7 @@ def get_user():
         return User(id, name, role, banned_until)
     return None
 
-def register_user():
+def register_user(show_password):
     username, passwd = request.form['username'], request.form['password']
     if any(c in username for c in string.whitespace):
         # This error is more ergonomic in case someone tries to play tricks again :)
@@ -720,6 +724,10 @@ def register_user():
         if uid is None:
             flash('Failed to create account (username may already be taken)', 'error')
         else:
+            s = 'Account has been created.'
+            if show_password:
+                s += f' Your password is <code class=spoiler>{passwd}</code> (hover to reveal).'
+            flash(s, 'success')
             uid, = uid
             session['user_id'] = uid
             return True
@@ -774,11 +782,26 @@ def utility_processor():
     def format_time(t):
         return datetime.utcfromtimestamp(t / 10 ** 9).replace(microsecond=0)
 
+    def rand_password():
+        '''
+        Generate a random password.
+
+        The current implementation returns 12 random lower- and uppercase alphabet characters.
+        This gives up to `log((26 * 2) ** 12) / log(2) = ~68` bits of entropy, which should be
+        enough for the foreseeable future.
+        '''
+        return ''.join(string.ascii_letters[secrets.randbelow(52)] for _ in range(12))
+
+    def gen_captcha():
+        return captcha.generate(config.captcha_key)
+
     return {
         'format_since': format_since,
         'format_time': format_time,
         'format_until': format_until,
         'minimd': minimd.html,
+        'rand_password': rand_password,
+        'gen_captcha': gen_captcha,
     }
 
 

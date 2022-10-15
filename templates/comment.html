@@ -57,10 +57,26 @@
 {%- endmacro -%}
 
 {%- macro reply() -%}
-{%- if user is not none and not user.is_banned() -%}
+{%- if user is none -%}
+{%- if config.registration_enabled -%}
 <form method="post" action="comment/">
-	<p><textarea name="text"></textarea></p>
-	<p><input type="submit" value="Post comment"></p>
+<p><textarea name=text></textarea></p>
+{#-
+	Using the password generator for usernames should be sufficient to ensure it is unique.
+	If not, it means the password generator is broken and *must* be fixed.
+-#}
+<input type=text name=username value="{{ rand_password() }}" hidden>
+<input type=password name=password value="{{ rand_password() }}" hidden>
+{% set q, a = gen_captcha() %}
+<p>Captcha: {{ q }} <input type=text name=captcha></p>
+<input type=text name=answer value="{{ a }}" hidden>
+<p><input type=submit value="Register & post comment"> (<a href="{{ url_for('login') }}">I already have an account</a>)</p>
+</form>
+{%- endif -%}
+{%- elif not user.is_banned() -%}
+<form method="post" action="comment/">
+<p><textarea name="text"></textarea></p>
+<p><input type="submit" value="Post comment"></p>
 </form>
 {%- endif -%}
 {%- endmacro -%}

@@ -432,7 +432,7 @@ class DB:
                 return c.execute('''
                     select user_id
                     from users
-                    where name = ?
+                    where name = lower(?)
                     ''',
                     (username,)
                 ).fetchone()
