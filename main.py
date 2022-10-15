@@ -7,6 +7,7 @@ from db.sqlite import DB
 import os, sys, subprocess
 import passlib.hash, secrets
 import time
+import string
 from datetime import datetime
 import captcha, password, minimd
 
@@ -188,7 +189,8 @@ def new_thread(forum_id):
         return redirect(url_for('login'))
 
     if request.method == 'POST':
-        title, text = request.form['title'], trim_text(request.form['text'])
+        title, text = request.form['title'].strip(), trim_text(request.form['text'])
+        title = title.strip()
         if title == '' or text == '':
             flash('Title and text may not be empty', 'error')
             return redirect(url_for('forum', forum_id = forum_id))
@@ -294,7 +296,7 @@ def edit_thread(thread_id):
         return redirect(url_for('login'))
 
     if request.method == 'POST':
-        title, text = request.form['title'], trim_text(request.form['text'])
+        title, text = request.form['title'].strip(), trim_text(request.form['text'])
         if title == '' or text == '':
             flash('Title and text may not be empty', 'error')
         elif db.modify_thread(
@@ -356,7 +358,10 @@ def edit_comment(comment_id):
 def register():
     if request.method == 'POST':
         username, passwd = request.form['username'], request.form['password']
-        if len(username) < 3:
+        if any(c in username for c in string.whitespace):
+            # This error is more ergonomic in case someone tries to play tricks again :)
+            flash('Username may not contain whitespace', 'error')
+        elif len(username) < 3:
             flash('Username must be at least 3 characters long', 'error')
         elif len(passwd) < 8:
             flash('Password must be at least 8 characters long', 'error')
