@@ -358,23 +358,8 @@ def edit_comment(comment_id):
 def register():
     if request.method == 'POST':
         username, passwd = request.form['username'], request.form['password']
-        if any(c in username for c in string.whitespace):
-            # This error is more ergonomic in case someone tries to play tricks again :)
-            flash('Username may not contain whitespace', 'error')
-        elif len(username) < 3:
-            flash('Username must be at least 3 characters long', 'error')
-        elif len(passwd) < 8:
-            flash('Password must be at least 8 characters long', 'error')
-        elif not captcha.verify(
-            config.captcha_key,
-            request.form['captcha'],
-            request.form['answer'],
-        ):
-            flash('CAPTCHA answer is incorrect', 'error')
-        elif not db.register_user(username, password.hash(passwd), time.time_ns()):
-            flash('Failed to create account (username may already be taken)', 'error')
-        else:
-            flash('Account has been created. You can login now.', 'success')
+        if register_user():
+            flash('Account has been created', 'success')
             return redirect(url_for('index'))
 
     capt, answer = captcha.generate(config.captcha_key)
@@ -714,6 +699,31 @@ def get_user():
         name, role, banned_until = db.get_user_name_role_banned(id)
         return User(id, name, role, banned_until)
     return None
+
+def register_user():
+    username, passwd = request.form['username'], request.form['password']
+    if any(c in username for c in string.whitespace):
+        # This error is more ergonomic in case someone tries to play tricks again :)
+        flash('Username may not contain whitespace', 'error')
+    elif len(username) < 3:
+        flash('Username must be at least 3 characters long', 'error')
+    elif len(passwd) < 8:
+        flash('Password must be at least 8 characters long', 'error')
+    elif not captcha.verify(
+        config.captcha_key,
+        request.form['captcha'],
+        request.form['answer'],
+    ):
+        flash('CAPTCHA answer is incorrect', 'error')
+    else:
+        uid = db.register_user(username, password.hash(passwd), time.time_ns())
+        if uid is None:
+            flash('Failed to create account (username may already be taken)', 'error')
+        else:
+            uid, = uid
+            session['user_id'] = uid
+            return True
+    return False
 
 
 @app.context_processor

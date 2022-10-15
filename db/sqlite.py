@@ -425,11 +425,21 @@ class DB:
             )
             if c.rowcount > 0:
                 db.commit()
-                return True
-            return False
+                # TODO find a way to get the (autoincremented) user ID without looking
+                # up by name.
+                # ROWID is *probably* not always consistent (race conditions).
+                # Ideally we get the ID immediately on insert.
+                return c.execute('''
+                    select user_id
+                    from users
+                    where name = ?
+                    ''',
+                    (username,)
+                ).fetchone()
+            return None
         except sqlite3.IntegrityError:
             # User already exists, probably
-            return False
+            return None
 
     def add_user(self, username, password, time):
         '''
