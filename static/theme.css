@@ -55,15 +55,19 @@ th, td {
 }
 
 textarea {
-	width: 50em;
+	width: min(100%, 500px);
 	height: 15em;
 	font-size: 1em;
 }
 
-input[type=text] {
-	width: 50em;
+input[type=text], input[type=password] {
+	width: min(100%, 20em);
 	font-family: monospace;
 	font-size: 1em;
+}
+
+td > input[type=text], td > input[type=password] {
+	width: min(100%, 500px);
 }
 
 .logo {
@@ -74,9 +78,13 @@ input[type=text] {
 	font-weight: bold;
 }
 
+form.form {
+	width: 90%;
+}
+
 table.form {
 	border-collapse: unset;
-	width: auto;
+	width: 100%;
 }
 
 table.form > * > tr > td, th {
@@ -101,14 +109,6 @@ table.form > * > tr > td, th {
 	background-color: #ff4646;
 	border-radius: 5px;
 	padding: 8px;
-}
-
-.login {
-	width: 50%;
-}
-
-.login input[type=text], .login input[type=password] {
-	width: 90%;
 }
 
 /* Abuse checkboxes to collapse comments */
