@@ -2,16 +2,14 @@ PYTHON = python3
 FLASK = flask
 SQLITE = sqlite3
 
-default: install
+default: venv
 
-test::
+test:: venv
 	test/all.sh
-
-install:: venv
-	. ./venv/bin/activate && pip3 install -r requirements.txt
 
 venv:
 	$(PYTHON) -m venv $@
+	. ./venv/bin/activate && pip3 install -r requirements.txt
 
 forum.db:
 	$(SQLITE) $@ < schema.txt
