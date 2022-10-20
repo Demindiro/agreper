@@ -29,3 +29,5 @@ insert into comments (author_id, thread_id, create_time, modify_time, text)
 	values (2, 1, 0, 0, "Hi!");
 insert into comments (author_id, thread_id, create_time, modify_time, text, parent_id)
 	values (3, 1, 0, 0, "Greetings.", 1);
+
+update config set registration_enabled = 1;

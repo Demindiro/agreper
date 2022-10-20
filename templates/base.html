@@ -34,7 +34,11 @@
 	<main>
 		<h1>{{ title }}</h1>
 		{%- for category, msg in get_flashed_messages(True) -%}
-		<p class="flash {{ category }}">{{ msg }}</p>
+		{#-
+			FIXME ensure all flash() messages are free of XSS vectors.
+			In particular, check places where we flash error messages.
+		-#}
+		<p class="flash {{ category }}">{{ msg | safe }}</p>
 		{%- endfor -%}
 		{%- block content %}{% endblock -%}
 	</main>

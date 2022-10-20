@@ -21,4 +21,4 @@ cd $base/..
 
 export DB=$db
 export SERVER=dev
-$FLASK --app main --debug run
+$FLASK --app main --debug run $TEST_FLASK_ARGS
