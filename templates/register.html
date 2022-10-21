@@ -6,7 +6,7 @@
 <table>
 <tr><td>Username</td><td><input type="text" name="username" minlength=3 required></td></tr>
 <tr><td>Password</td><td><input type="password" name="password" minlength=8 required></td></tr>
-<tr><td>{{ captcha }}</td><td><input type="text" name="captcha"></td></tr>
+<tr><td>{{ captcha }}</td><td><input type="text" name="captcha" required></td></tr>
 </table>
 <input name="answer" value="{{ answer }}" hidden>
 <input type="submit" value="Register">
