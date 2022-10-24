@@ -185,23 +185,30 @@ def user_info(user_id):
 @app.route('/forum/<int:forum_id>/new/', methods = ['GET', 'POST'])
 def new_thread(forum_id):
     user_id = session.get('user_id')
-    if user_id is None:
+    if user_id is None and not config.registration_enabled:
+        # Can't create a thread without an account
         return redirect(url_for('login'))
 
     if request.method == 'POST':
-        title, text = request.form['title'].strip(), trim_text(request.form['text'])
-        title = title.strip()
-        if title == '' or text == '':
-            flash('Title and text may not be empty', 'error')
-            return redirect(url_for('forum', forum_id = forum_id))
-        id = db.add_thread(user_id, forum_id, title, text, time.time_ns())
-        if id is None:
-            flash('Failed to create thread', 'error')
-            return redirect(url_for('forum', forum_id = forum_id))
-        else:
-            id, = id
-            flash('Created thread', 'success')
-            return redirect(url_for('thread', thread_id = id))
+        if user_id is None:
+            # Attempt to create a user account first
+            if register_user(True):
+                user_id = session['user_id']
+
+        if user_id is not None:
+            title, text = request.form['title'].strip(), trim_text(request.form['text'])
+            title = title.strip()
+            if title == '' or text == '':
+                flash('Title and text may not be empty', 'error')
+                return redirect(url_for('forum', forum_id = forum_id))
+            id = db.add_thread(user_id, forum_id, title, text, time.time_ns())
+            if id is None:
+                flash('Failed to create thread', 'error')
+                return redirect(url_for('forum', forum_id = forum_id))
+            else:
+                id, = id
+                flash('Created thread', 'success')
+                return redirect(url_for('thread', thread_id = id))
 
     return render_template(
         'new_thread.html',
