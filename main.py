@@ -110,6 +110,7 @@ def login():
             if password.verify(request.form['password'], hash):
                 flash('Logged in', 'success')
                 session['user_id'] = id
+                session.permanent = True
                 return redirect(url_for('index'))
         else:
             # Sleep to reduce effectiveness of bruteforce
@@ -730,6 +731,7 @@ def register_user(show_password):
             flash(s, 'success')
             uid, = uid
             session['user_id'] = uid
+            session.permanent = True
             return True
     return False
 
