@@ -46,6 +46,7 @@ table {
 }
 
 tr:not(:last-child) {
+	/* FIXME this is sometimes invisible depending on zoom level in Firefox. */
 	border-bottom: 1px solid;
 }
 
@@ -83,7 +84,6 @@ form.form {
 }
 
 table.form {
-	border-collapse: unset;
 	width: 100%;
 }
 

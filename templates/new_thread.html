@@ -1,17 +1,45 @@
 {% extends 'base.html' %}
 
 {% block content %}
+{%- if user is none -%}
+<form method="post">
+	{#-
+		Using the password generator for usernames should be sufficient to ensure it is unique.
+		If not, it means the password generator is broken and *must* be fixed.
+	-#}
+	<input type=text name=username value="{{ rand_password() }}" hidden>
+	<input type=password name=password value="{{ rand_password() }}" hidden>
+	{%- set q, a = gen_captcha() -%}
+	<input type=text name=answer value="{{ a }}" hidden>
+	<table class=form>
+		<tr>
+			<td>Title</td>
+			<td><input type="text" name="title" required></td>
+		</tr>
+		<tr>
+			<td>Text</td>
+			<td><textarea name="text" required></textarea></td>
+		</tr>
+		<tr>
+			<td>{{ q }}</td>
+			<td><input type=text name=captcha required></td>
+		</tr>
+	</table>
+	<p><input type="submit" value="Register & post"> (<a href="{{ url_for('login') }}">I already have an account</a>)</p>
+</form>
+{%- else -%}
 <form method="post">
 	<table class=form>
 		<tr>
 			<td>Title</td>
-			<td><input type="text" name="title"></td>
+			<td><input type="text" name="title" required></td>
 		</tr>
 		<tr>
 			<td>Text</td>
-			<td><textarea name="text"></textarea></td>
+			<td><textarea name="text" required></textarea></td>
 		</tr>
 	</table>
 	<p><input type="submit" value="Post"></p>
 </form>
+{%- endif -%}
 {% endblock %}
