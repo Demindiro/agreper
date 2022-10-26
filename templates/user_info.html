@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 
 {%- block content %}
-{%- if user is not none and user.is_moderator -%}
+{%- if user is not none and user.is_moderator() -%}
 <p>
 <form method=post action="{{ url_for('moderator_ban_user', user_id = id) }}">
 <input type=number name=days placeholder=days>
