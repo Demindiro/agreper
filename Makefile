@@ -4,7 +4,7 @@ SQLITE = sqlite3
 
 default: venv
 
-test:: venv
+test: venv
 	test/all.sh
 
 venv:
@@ -13,3 +13,5 @@ venv:
 
 forum.db:
 	$(SQLITE) $@ < schema.txt
+
+.PHONY: test
