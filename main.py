@@ -33,6 +33,13 @@ class Role:
     MODERATOR = 1
     ADMIN = 2
 
+@app.after_request
+def after_request(response):
+    # This forbids other sites from embedding this site in an iframe,
+    # preventing clickjacking attacks.
+    response.headers['X-Frame-Options'] = 'DENY'
+    return response
+
 @app.route('/')
 def index():
     return render_template(
