@@ -14,6 +14,11 @@ import captcha, password, minimd
 app = Flask(__name__)
 db = DB(os.getenv('DB'))
 
+# This defaults to None, which allows CSRF attacks in FireFox
+# and older versions of Chrome.
+# 'Lax' is sufficient to prevent malicious POST requests.
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+
 class Config:
     pass
 config = Config()
@@ -27,6 +32,13 @@ class Role:
     USER = 0
     MODERATOR = 1
     ADMIN = 2
+
+@app.after_request
+def after_request(response):
+    # This forbids other sites from embedding this site in an iframe,
+    # preventing clickjacking attacks.
+    response.headers['X-Frame-Options'] = 'DENY'
+    return response
 
 @app.route('/')
 def index():
