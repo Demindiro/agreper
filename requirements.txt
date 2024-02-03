@@ -2,3 +2,4 @@ argon2-cffi==21.3.0
 Flask==2.2.2
 gunicorn==20.1.0
 passlib==1.7.4
+Werkzeug==2.2.2
